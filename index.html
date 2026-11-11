@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculadora Moderna Elegante</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            glass: {
+              light: 'rgba(255, 255, 255, 0.7)',
+              dark: 'rgba(30, 41, 59, 0.7)',
+              borderLight: 'rgba(255, 255, 255, 0.4)',
+              borderDark: 'rgba(255, 255, 255, 0.1)',
+            }
+          },
+          boxShadow: {
+            'glass-light': '0 20px 40px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6)',
+            'glass-dark': '0 20px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+            'btn-light': '0 4px 6px -1px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.8)',
+            'btn-dark': '0 4px 6px -1px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05)',
+            'btn-active': 'inset 0 2px 4px rgba(0,0,0,0.2)'
+          }
+        }
+      }
+    }
+  </script>
+  <!-- FontAwesome para iconos -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Font Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    /* Efecto Glassmorphism */
+    .glass-panel {
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+
+    .btn-press {
+      transition: all 0.1s ease;
+    }
+    .btn-press:active, .btn-press.active-key {
+      transform: scale(0.94);
+    }
+
+    ::-webkit-scrollbar {
+      width: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(156, 163, 175, 0.3);
+      border-radius: 10px;
+    }
+
+    .scientific-drawer {
+      transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out, margin 0.3s ease-in-out;
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+    }
+    .scientific-drawer.open {
+      max-height: 320px;
+      opacity: 1;
+      margin-bottom: 0.75rem;
+    }
+  </style>
+</head>
+<body id="appBg" class="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 text-slate-800 dark:text-slate-100 flex items-center justify-center p-2 sm:p-4 transition-all duration-500">
+
+  <!-- Contenedor Principal de la Calculadora -->
+  <div class="relative w-full max-w-md bg-white/70 dark:bg-slate-900/70 border border-white/50 dark:border-slate-700/50 rounded-3xl p-4 sm:p-6 shadow-glass-light dark:shadow-glass-dark glass-panel transition-all duration-300">
+
+    <!-- Barra de Herramientas Superior -->
+    <div class="flex justify-between items-center mb-4">
+      <div class="flex items-center space-x-2">
+        <!-- Botón Modo Oscuro / Claro -->
+        <button id="themeToggleBtn" class="w-9 h-9 rounded-full bg-slate-200/60 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 flex items-center justify-center transition-all btn-press shadow-sm" title="Cambiar Modo Claro/Oscuro">
+          <i id="themeIcon" class="fas fa-moon"></i>
+        </button>
+        <!-- Botón de Sonido -->
+        <button id="soundToggleBtn" class="w-9 h-9 rounded-full bg-slate-200/60 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 flex items-center justify-center transition-all btn-press shadow-sm" title="Activar/Desactivar Sonido">
+          <i id="soundIcon" class="fas fa-volume-up text-xs"></i>
+        </button>
+        <!-- Selector de Color y Fondo -->
+        <button id="colorMenuBtn" class="w-9 h-9 rounded-full bg-slate-200/60 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 flex items-center justify-center transition-all btn-press shadow-sm" title="Cambiar Color y Fondo">
+          <i class="fas fa-palette text-xs"></i>
+        </button>
+        <!-- Botón Modo Científico -->
+        <button id="scientificToggleBtn" class="h-9 px-3 text-xs font-semibold rounded-full bg-slate-200/60 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 flex items-center justify-center transition-all btn-press shadow-sm">
+          <span>Sci</span>
+          <i class="fas fa-chevron-down ml-1 text-[10px] transition-transform duration-300" id="sciIcon"></i>
+        </button>
+      </div>
+
+      <!-- Botón Historial -->
+      <button id="historyToggleBtn" class="w-9 h-9 rounded-full bg-slate-200/60 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 flex items-center justify-center transition-all btn-press shadow-sm relative" title="Ver Historial">
+        <i class="fas fa-history text-xs"></i>
+      </button>
+    </div>
+
+    <!-- Menú Desplegable de Personalización (Fondos y Colores) -->
+    <div id="colorPalette" class="hidden flex flex-col space-y-3 mb-4 p-3 bg-slate-100/90 dark:bg-slate-800/90 rounded-2xl border border-slate-200/50 dark:border-slate-700/50 transition-all">
+      <!-- Sección Estilo de Fondo -->
+      <div>
+        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400 mb-1.5 block">Estilo de Fondo</span>
+        <div class="grid grid-cols-5 gap-2">
+          <button class="bg-opt h-7 rounded-lg bg-gradient-to-br from-indigo-300 to-pink-300 dark:from-slate-950 dark:to-indigo-950 border border-slate-300 dark:border-slate-600 btn-press" data-bg="aurora" title="Aurora Glass"></button>
+          <button class="bg-opt h-7 rounded-lg bg-gradient-to-br from-fuchsia-600 to-cyan-500 border border-slate-300 dark:border-slate-600 btn-press" data-bg="cyberpunk" title="Cyberpunk"></button>
+          <button class="bg-opt h-7 rounded-lg bg-gradient-to-br from-slate-100 to-slate-300 dark:from-slate-900 dark:to-slate-800 border border-slate-300 dark:border-slate-600 btn-press" data-bg="minimal" title="Minimalista"></button>
+          <button class="bg-opt h-7 rounded-lg bg-gradient-to-br from-slate-950 to-blue-950 border border-slate-300 dark:border-slate-600 btn-press" data-bg="midnight" title="Medianoche Profunda"></button>
+          <button class="bg-opt h-7 rounded-lg bg-gradient-to-br from-rose-400 to-orange-300 dark:from-amber-950 dark:to-rose-950 border border-slate-300 dark:border-slate-600 btn-press" data-bg="sunset" title="Atardecer Cálido"></button>
+        </div>
+      </div>
+
+      <!-- Sección Color de Botones -->
+      <div>
+        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400 mb-1.5 block">Color de Botones</span>
+        <div class="flex justify-between items-center px-1">
+          <button class="color-opt w-7 h-7 rounded-full bg-indigo-500 ring-2 ring-indigo-400 btn-press" data-theme="indigo" title="Índigo / Violeta"></button>
+          <button class="color-opt w-7 h-7 rounded-full bg-emerald-500 btn-press" data-theme="emerald" title="Esmeralda / Verde"></button>
+          <button class="color-opt w-7 h-7 rounded-full bg-rose-500 btn-press" data-theme="rose" title="Rosa / Carmesí"></button>
+          <button class="color-opt w-7 h-7 rounded-full bg-amber-500 btn-press" data-theme="amber" title="Ámbar / Naranja"></button>
+          <button class="color-opt w-7 h-7 rounded-full bg-cyan-500 btn-press" data-theme="cyan" title="Azul Oceánico"></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pantalla de Display de la Calculadora -->
+    <div class="bg-slate-100/80 dark:bg-slate-950/80 rounded-2xl p-4 mb-4 text-right border border-slate-200/50 dark:border-slate-800/50 shadow-inner flex flex-col justify-end min-h-[110px] overflow-hidden relative">
+      <!-- Indicadores Superiores (Operación e Indicador de Memoria) -->
+      <div class="flex justify-between items-center h-6 mb-1">
+        <span id="memoryIndicator" class="text-xs font-bold px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-500 dark:text-indigo-400 opacity-0 transition-opacity">M</span>
+        <div id="expressionDisplay" class="text-xs sm:text-sm text-slate-400 dark:text-slate-500 font-medium overflow-x-auto whitespace-nowrap scrollbar-none"></div>
+      </div>
+      <!-- Número Principal o Resultado -->
+      <div id="mainDisplay" class="text-3xl sm:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-100 overflow-x-auto whitespace-nowrap scrollbar-none transition-all">
+        0
+      </div>
+    </div>
+
+    <!-- Panel Científico y de Memoria Desplegable -->
+    <div id="scientificDrawer" class="scientific-drawer grid grid-cols-4 gap-2">
+      <!-- Funciones de Memoria -->
+      <button class="btn-calc btn-mem" data-action="mc">MC</button>
+      <button class="btn-calc btn-mem" data-action="mr">MR</button>
+      <button class="btn-calc btn-mem" data-action="m-add">M+</button>
+      <button class="btn-calc btn-mem" data-action="m-sub">M-</button>
+
+      <!-- Funciones Científicas -->
+      <button class="btn-calc btn-sci" data-action="sin">sin</button>
+      <button class="btn-calc btn-sci" data-action="cos">cos</button>
+      <button class="btn-calc btn-sci" data-action="tan">tan</button>
+      <button class="btn-calc btn-sci" data-action="log">log</button>
+      <button class="btn-calc btn-sci" data-action="ln">ln</button>
+      <button class="btn-calc btn-sci" data-action="sqrt">√</button>
+      <button class="btn-calc btn-sci" data-action="pow">x²</button>
+      <button class="btn-calc btn-sci" data-action="pi">π</button>
+    </div>
+
+    <!-- Teclado Principal (Grid) -->
+    <div class="grid grid-cols-4 gap-2.5 sm:gap-3">
+      <!-- Fila 1 -->
+      <button class="btn-calc btn-func" data-action="clear">AC</button>
+      <button class="btn-calc btn-func" data-action="backspace"><i class="fas fa-backspace"></i></button>
+      <button class="btn-calc btn-func" data-action="percent">%</button>
+      <button class="btn-calc btn-op" data-action="divide">÷</button>
+
+      <!-- Fila 2 -->
+      <button class="btn-calc btn-num" data-val="7">7</button>
+      <button class="btn-calc btn-num" data-val="8">8</button>
+      <button class="btn-calc btn-num" data-val="9">9</button>
+      <button class="btn-calc btn-op" data-action="multiply">×</button>
+
+      <!-- Fila 3 -->
+      <button class="btn-calc btn-num" data-val="4">4</button>
+      <button class="btn-calc btn-num" data-val="5">5</button>
+      <button class="btn-calc btn-num" data-val="6">6</button>
+      <button class="btn-calc btn-op" data-action="subtract">-</button>
+
+      <!-- Fila 4 -->
+      <button class="btn-calc btn-num" data-val="1">1</button>
+      <button class="btn-calc btn-num" data-val="2">2</button>
+      <button class="btn-calc btn-num" data-val="3">3</button>
+      <button class="btn-calc btn-op" data-action="add">+</button>
+
+      <!-- Fila 5 -->
+      <button class="btn-calc btn-num" data-action="toggle-sign">±</button>
+      <button class="btn-calc btn-num" data-val="0">0</button>
+      <button class="btn-calc btn-num" data-val=".">.</button>
+      <button class="btn-calc btn-equals" data-action="equals">=</button>
+    </div>
+
+    <!-- Historial Overlay -->
+    <div id="historyOverlay" class="absolute inset-0 bg-white/95 dark:bg-slate-900/95 glass-panel rounded-3xl p-5 flex flex-col justify-between transition-all duration-300 opacity-0 pointer-events-none translate-y-4 z-20">
+      <div>
+        <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-200 dark:border-slate-800">
+          <h3 class="font-bold text-slate-800 dark:text-slate-100 flex items-center">
+            <i class="fas fa-history mr-2 id-history-icon text-indigo-500"></i> Historial
+          </h3>
+          <button id="closeHistoryBtn" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div id="historyList" class="max-h-[300px] overflow-y-auto space-y-2 pr-1">
+          <div class="text-center text-xs text-slate-400 py-8">No hay operaciones recientes</div>
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center">
+        <button id="clearHistoryBtn" class="text-xs text-red-500 hover:text-red-600 font-medium flex items-center">
+          <i class="fas fa-trash-alt mr-1"></i> Borrar Historial
+        </button>
+        <span class="text-[10px] text-slate-400">Haz clic en una entrada para reutilizarla</span>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // --- Fondos Disponibles ---
+    const backgroundStyles = {
+      aurora: "from-indigo-100 via-purple-50 to-pink-100 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950",
+      cyberpunk: "from-purple-900 via-slate-950 to-cyan-900 dark:from-black dark:via-purple-950 dark:to-cyan-950",
+      minimal: "from-slate-50 via-slate-100 to-slate-200 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800",
+      midnight: "from-slate-950 via-blue-950 to-slate-900 dark:from-black dark:via-slate-950 dark:to-blue-950",
+      sunset: "from-rose-100 via-orange-50 to-amber-100 dark:from-slate-950 dark:via-rose-950 dark:to-amber-950"
+    };
+
+    let currentBgStyle = 'aurora';
+    let currentThemeKey = 'indigo';
+
+    // --- Esquemas de Color Dinámicos ---
+    const colorThemes = {
+      indigo: {
+        op: "bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-900/60 border border-indigo-200/50 dark:border-indigo-800/40 font-bold",
+        sci: "bg-purple-100/60 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 hover:bg-purple-200/60 dark:hover:bg-purple-900/40 border border-purple-200/40 dark:border-purple-800/30 text-sm font-medium h-10 sm:h-11",
+        mem: "bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 border border-indigo-200/40 text-xs font-semibold h-9",
+        equals: "bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700 border-none shadow-md shadow-indigo-500/30 font-bold text-xl",
+        icon: "text-indigo-500",
+        memInd: "px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-500 dark:text-indigo-400"
+      },
+      emerald: {
+        op: "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-900/60 border border-emerald-200/50 dark:border-emerald-800/40 font-bold",
+        sci: "bg-teal-100/60 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 hover:bg-teal-200/60 dark:hover:bg-teal-900/40 border border-teal-200/40 dark:border-teal-800/30 text-sm font-medium h-10 sm:h-11",
+        mem: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 border border-emerald-200/40 text-xs font-semibold h-9",
+        equals: "bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700 border-none shadow-md shadow-emerald-500/30 font-bold text-xl",
+        icon: "text-emerald-500",
+        memInd: "px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-500 dark:text-emerald-400"
+      },
+      rose: {
+        op: "bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 hover:bg-rose-200 dark:hover:bg-rose-900/60 border border-rose-200/50 dark:border-rose-800/40 font-bold",
+        sci: "bg-pink-100/60 dark:bg-pink-950/40 text-pink-700 dark:text-pink-300 hover:bg-pink-200/60 dark:hover:bg-pink-900/40 border border-pink-200/40 dark:border-pink-800/30 text-sm font-medium h-10 sm:h-11",
+        mem: "bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/40 border border-rose-200/40 text-xs font-semibold h-9",
+        equals: "bg-gradient-to-r from-rose-500 to-pink-600 text-white hover:from-rose-600 hover:to-pink-700 border-none shadow-md shadow-rose-500/30 font-bold text-xl",
+        icon: "text-rose-500",
+        memInd: "px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-500 dark:text-rose-400"
+      },
+      amber: {
+        op: "bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-900/60 border border-amber-200/50 dark:border-amber-800/40 font-bold",
+        sci: "bg-orange-100/60 dark:bg-orange-950/40 text-orange-700 dark:text-orange-300 hover:bg-orange-200/60 dark:hover:bg-orange-900/40 border border-orange-200/40 dark:border-orange-800/30 text-sm font-medium h-10 sm:h-11",
+        mem: "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/40 border border-amber-200/40 text-xs font-semibold h-9",
+        equals: "bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:from-amber-600 hover:to-orange-700 border-none shadow-md shadow-amber-500/30 font-bold text-xl",
+        icon: "text-amber-500",
+        memInd: "px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-500 dark:text-amber-400"
+      },
+      cyan: {
+        op: "bg-cyan-100 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-400 hover:bg-cyan-200 dark:hover:bg-cyan-900/60 border border-cyan-200/50 dark:border-cyan-800/40 font-bold",
+        sci: "bg-sky-100/60 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 hover:bg-sky-200/60 dark:hover:bg-sky-900/40 border border-sky-200/40 dark:border-sky-800/30 text-sm font-medium h-10 sm:h-11",
+        mem: "bg-cyan-50 dark:bg-cyan-950/40 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-100 dark:hover:bg-cyan-900/40 border border-cyan-200/40 text-xs font-semibold h-9",
+        equals: "bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:from-cyan-600 hover:to-blue-700 border-none shadow-md shadow-cyan-500/30 font-bold text-xl",
+        icon: "text-cyan-500",
+        memInd: "px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-500 dark:text-cyan-400"
+      }
+    };
+
+    const baseClasses = "btn-press h-12 sm:h-14 rounded-2xl text-base sm:text-lg font-semibold flex items-center justify-center transition-all duration-150 shadow-btn-light dark:shadow-btn-dark active:shadow-btn-active";
+    const numClasses = "bg-white/80 dark:bg-slate-800/80 text-slate-800 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-700/80 border border-slate-200/60 dark:border-slate-700/40";
+    const funcClasses = "bg-slate-200/70 dark:bg-slate-700/60 text-slate-700 dark:text-slate-200 hover:bg-slate-300/70 dark:hover:bg-slate-600/70 border border-slate-300/40 dark:border-slate-600/40";
+
+    function updateBackground(bgKey) {
+      currentBgStyle = bgKey;
+      const bgClass = backgroundStyles[bgKey];
+      document.getElementById('appBg').className = `min-h-screen bg-gradient-to-br ${bgClass} text-slate-800 dark:text-slate-100 flex items-center justify-center p-2 sm:p-4 transition-all duration-500`;
+    }
+
+    function applyTheme(themeKey) {
+      currentThemeKey = themeKey;
+      const theme = colorThemes[themeKey];
+
+      document.querySelectorAll('.btn-op').forEach(b => b.className = `btn-calc btn-op ${baseClasses} ${theme.op}`);
+      document.querySelectorAll('.btn-sci').forEach(b => b.className = `btn-calc btn-sci ${baseClasses} ${theme.sci}`);
+      document.querySelectorAll('.btn-mem').forEach(b => b.className = `btn-calc btn-mem ${baseClasses} ${theme.mem}`);
+      document.querySelectorAll('.btn-equals').forEach(b => b.className = `btn-calc btn-equals ${baseClasses} ${theme.equals}`);
+
+      const historyIcon = document.querySelector('.id-history-icon');
+      if (historyIcon) historyIcon.className = `fas fa-history mr-2 id-history-icon ${theme.icon}`;
+
+      const memoryIndicator = document.getElementById('memoryIndicator');
+      if (memoryIndicator) memoryIndicator.className = `text-xs font-bold transition-opacity ${theme.memInd} ${memoryValue !== 0 ? 'opacity-100' : 'opacity-0'}`;
+
+      document.querySelectorAll('.color-opt').forEach(btn => {
+        btn.classList.remove('ring-2', 'ring-indigo-400', 'ring-emerald-400', 'ring-rose-400', 'ring-amber-400', 'ring-cyan-400');
+        if (btn.getAttribute('data-theme') === themeKey) {
+          btn.classList.add('ring-2', `ring-${themeKey}-400`);
+        }
+      });
+    }
+
+    // Inicializar estilos de botones
+    document.querySelectorAll('.btn-calc').forEach(btn => {
+      if (btn.classList.contains('btn-num')) btn.className += ` ${baseClasses} ${numClasses}`;
+      if (btn.classList.contains('btn-func')) btn.className += ` ${baseClasses} ${funcClasses}`;
+    });
+
+    // Menú desplegable de personalización
+    const colorMenuBtn = document.getElementById('colorMenuBtn');
+    const colorPalette = document.getElementById('colorPalette');
+    colorMenuBtn.addEventListener('click', () => {
+      colorPalette.classList.toggle('hidden');
+    });
+
+    // Cambiar Fondo
+    document.querySelectorAll('.bg-opt').forEach(btn => {
+      btn.addEventListener('click', () => {
+        updateBackground(btn.getAttribute('data-bg'));
+      });
+    });
+
+    // Cambiar Color de Botones
+    document.querySelectorAll('.color-opt').forEach(btn => {
+      btn.addEventListener('click', () => {
+        applyTheme(btn.getAttribute('data-theme'));
+      });
+    });
+
+    // --- Estado de la Calculadora ---
+    let currentValue = '0';
+    let previousValue = null;
+    let currentOperation = null;
+    let shouldResetDisplay = false;
+    let history = [];
+    let soundEnabled = true;
+    let memoryValue = 0;
+
+    const mainDisplay = document.getElementById('mainDisplay');
+    const expressionDisplay = document.getElementById('expressionDisplay');
+    const memoryIndicator = document.getElementById('memoryIndicator');
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    const themeIcon = document.getElementById('themeIcon');
+    const soundToggleBtn = document.getElementById('soundToggleBtn');
+    const soundIcon = document.getElementById('soundIcon');
+    const scientificToggleBtn = document.getElementById('scientificToggleBtn');
+    const scientificDrawer = document.getElementById('scientificDrawer');
+    const sciIcon = document.getElementById('sciIcon');
+    const historyToggleBtn = document.getElementById('historyToggleBtn');
+    const historyOverlay = document.getElementById('historyOverlay');
+    const closeHistoryBtn = document.getElementById('closeHistoryBtn');
+    const historyList = document.getElementById('historyList');
+    const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playClickSound(freq = 600, type = 'sine') {
+      if (!soundEnabled) return;
+      try {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.08);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.08);
+      } catch (e) {}
+    }
+
+    function triggerHaptic() {
+      if (navigator.vibrate) navigator.vibrate(10);
+    }
+
+    function updateDisplay() {
+      mainDisplay.textContent = formatNumber(currentValue);
+      if (currentValue.length > 10) {
+        mainDisplay.className = "text-xl sm:text-2xl font-bold tracking-tight text-slate-800 dark:text-slate-100 overflow-x-auto whitespace-nowrap scrollbar-none transition-all";
+      } else {
+        mainDisplay.className = "text-3xl sm:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-100 overflow-x-auto whitespace-nowrap scrollbar-none transition-all";
+      }
+      memoryIndicator.classList.toggle('opacity-100', memoryValue !== 0);
+      memoryIndicator.classList.toggle('opacity-0', memoryValue === 0);
+    }
+
+    function formatNumber(numStr) {
+      if (numStr === 'Error') return 'Error';
+      if (numStr.endsWith('.')) return numStr;
+      const parts = numStr.split('.');
+      const integerPart = parseFloat(parts[0]).toLocaleString('es-ES');
+      if (isNaN(parseFloat(parts[0]))) return '0';
+      return parts.length > 1 ? `${integerPart}.${parts[1]}` : integerPart;
+    }
+
+    function handleNumber(num) {
+      playClickSound(500);
+      triggerHaptic();
+      if (shouldResetDisplay) {
+        currentValue = num === '.' ? '0.' : num;
+        shouldResetDisplay = false;
+      } else {
+        if (num === '.' && currentValue.includes('.')) return;
+        if (currentValue === '0' && num !== '.') {
+          currentValue = num;
+        } else {
+          if (currentValue.replace('.', '').length >= 12) return;
+          currentValue += num;
+        }
+      }
+      updateDisplay();
+    }
+
+    function handleOperation(op) {
+      playClickSound(700);
+      triggerHaptic();
+      if (currentOperation && !shouldResetDisplay) {
+        calculateResult();
+      }
+      previousValue = currentValue;
+      currentOperation = op;
+      shouldResetDisplay = true;
+
+      const opSymbol = getOpSymbol(op);
+      expressionDisplay.textContent = `${formatNumber(previousValue)} ${opSymbol}`;
+    }
+
+    function getOpSymbol(op) {
+      switch(op) {
+        case 'add': return '+';
+        case 'subtract': return '-';
+        case 'multiply': return '×';
+        case 'divide': return '÷';
+        default: return '';
+      }
+    }
+
+    function calculateResult() {
+      if (!currentOperation || previousValue === null) return;
+
+      const prev = parseFloat(previousValue);
+      const current = parseFloat(currentValue);
+      let result = 0;
+
+      switch(currentOperation) {
+        case 'add': result = prev + current; break;
+        case 'subtract': result = prev - current; break;
+        case 'multiply': result = prev * current; break;
+        case 'divide':
+          if (current === 0) {
+            result = 'Error';
+          } else {
+            result = prev / current;
+          }
+          break;
+      }
+
+      const expr = `${formatNumber(previousValue)} ${getOpSymbol(currentOperation)} ${formatNumber(currentValue)} =`;
+      expressionDisplay.textContent = expr;
+
+      if (result !== 'Error') {
+        result = Math.round(result * 1e10) / 1e10;
+        addToHistory(expr, result.toString());
+        currentValue = result.toString();
+      } else {
+        currentValue = 'Error';
+      }
+
+      currentOperation = null;
+      previousValue = null;
+      shouldResetDisplay = true;
+      updateDisplay();
+    }
+
+    function handleAction(action) {
+      playClickSound(650);
+      triggerHaptic();
+
+      const numVal = parseFloat(currentValue);
+
+      switch(action) {
+        case 'clear':
+          currentValue = '0';
+          previousValue = null;
+          currentOperation = null;
+          shouldResetDisplay = false;
+          expressionDisplay.textContent = '';
+          updateDisplay();
+          break;
+
+        case 'backspace':
+          if (shouldResetDisplay) return;
+          if (currentValue.length > 1) {
+            currentValue = currentValue.slice(0, -1);
+          } else {
+            currentValue = '0';
+          }
+          updateDisplay();
+          break;
+
+        case 'toggle-sign':
+          if (currentValue !== '0' && currentValue !== 'Error') {
+            currentValue = (parseFloat(currentValue) * -1).toString();
+            updateDisplay();
+          }
+          break;
+
+        case 'percent':
+          if (currentValue !== 'Error') {
+            currentValue = (parseFloat(currentValue) / 100).toString();
+            updateDisplay();
+          }
+          break;
+
+        case 'equals':
+          calculateResult();
+          break;
+
+        // Memoria
+        case 'mc':
+          memoryValue = 0;
+          updateDisplay();
+          break;
+
+        case 'mr':
+          currentValue = memoryValue.toString();
+          shouldResetDisplay = true;
+          updateDisplay();
+          break;
+
+        case 'm-add':
+          if (!isNaN(numVal)) memoryValue += numVal;
+          shouldResetDisplay = true;
+          updateDisplay();
+          break;
+
+        case 'm-sub':
+          if (!isNaN(numVal)) memoryValue -= numVal;
+          shouldResetDisplay = true;
+          updateDisplay();
+          break;
+
+        // Científicas
+        case 'sin': applyScientific(x => Math.sin(x * Math.PI / 180), 'sin'); break;
+        case 'cos': applyScientific(x => Math.cos(x * Math.PI / 180), 'cos'); break;
+        case 'tan': applyScientific(x => Math.tan(x * Math.PI / 180), 'tan'); break;
+        case 'log': applyScientific(x => Math.log10(x), 'log'); break;
+        case 'ln': applyScientific(x => Math.log(x), 'ln'); break;
+        case 'sqrt': applyScientific(x => Math.sqrt(x), '√'); break;
+        case 'pow': applyScientific(x => Math.pow(x, 2), 'sqr'); break;
+        case 'pi':
+          currentValue = Math.PI.toString();
+          shouldResetDisplay = false;
+          updateDisplay();
+          break;
+      }
+    }
+
+    function applyScientific(fn, name) {
+      if (currentValue === 'Error') return;
+      const val = parseFloat(currentValue);
+      try {
+        const res = Math.round(fn(val) * 1e10) / 1e10;
+        const expr = `${name}(${formatNumber(currentValue)}) =`;
+        expressionDisplay.textContent = expr;
+        addToHistory(expr, res.toString());
+        currentValue = res.toString();
+        shouldResetDisplay = true;
+        updateDisplay();
+      } catch(e) {
+        currentValue = 'Error';
+        updateDisplay();
+      }
+    }
+
+    function addToHistory(expression, result) {
+      history.unshift({ expression, result });
+      if (history.length > 20) history.pop();
+      renderHistory();
+    }
+
+    function renderHistory() {
+      if (history.length === 0) {
+        historyList.innerHTML = `<div class="text-center text-xs text-slate-400 py-8">No hay operaciones recientes</div>`;
+        return;
+      }
+
+      historyList.innerHTML = history.map((item, index) => `
+        <div class="p-2.5 rounded-xl bg-slate-100/60 dark:bg-slate-800/60 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 cursor-pointer transition-all btn-press" data-index="${index}">
+          <div class="text-xs text-slate-400 dark:text-slate-500 text-right">${item.expression}</div>
+          <div class="text-base font-bold text-slate-700 dark:text-slate-200 text-right">${formatNumber(item.result)}</div>
+        </div>
+      `).join('');
+
+      historyList.querySelectorAll('[data-index]').forEach(el => {
+        el.addEventListener('click', () => {
+          const idx = el.getAttribute('data-index');
+          currentValue = history[idx].result;
+          shouldResetDisplay = false;
+          updateDisplay();
+          toggleHistory(false);
+        });
+      });
+    }
+
+    function toggleHistory(show) {
+      if (show) {
+        historyOverlay.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-4');
+        historyOverlay.classList.add('opacity-100', 'pointer-events-auto', 'translate-y-0');
+      } else {
+        historyOverlay.classList.add('opacity-0', 'pointer-events-none', 'translate-y-4');
+        historyOverlay.classList.remove('opacity-100', 'pointer-events-auto', 'translate-y-0');
+      }
+    }
+
+    // Handlers
+    document.querySelectorAll('.btn-calc').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const val = btn.getAttribute('data-val');
+        const action = btn.getAttribute('data-action');
+
+        if (val !== null) handleNumber(val);
+        else if (action === 'add' || action === 'subtract' || action === 'multiply' || action === 'divide') {
+          handleOperation(action);
+        } else if (action) {
+          handleAction(action);
+        }
+      });
+    });
+
+    themeToggleBtn.addEventListener('click', () => {
+      document.documentElement.classList.toggle('dark');
+      const isDark = document.documentElement.classList.contains('dark');
+      themeIcon.className = isDark ? 'fas fa-moon' : 'fas fa-sun text-amber-500';
+      playClickSound(800);
+    });
+
+    soundToggleBtn.addEventListener('click', () => {
+      soundEnabled = !soundEnabled;
+      soundIcon.className = soundEnabled ? 'fas fa-volume-up text-xs' : 'fas fa-volume-mute text-xs text-red-400';
+      if (soundEnabled) playClickSound(900);
+    });
+
+    scientificToggleBtn.addEventListener('click', () => {
+      scientificDrawer.classList.toggle('open');
+      sciIcon.classList.toggle('rotate-180');
+      playClickSound(750);
+    });
+
+    historyToggleBtn.addEventListener('click', () => toggleHistory(true));
+    closeHistoryBtn.addEventListener('click', () => toggleHistory(false));
+    clearHistoryBtn.addEventListener('click', () => {
+      history = [];
+      renderHistory();
+      playClickSound(400);
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key >= '0' && e.key <= '9') handleNumber(e.key);
+      if (e.key === '.' || e.key === ',') handleNumber('.');
+      if (e.key === '+') handleOperation('add');
+      if (e.key === '-') handleOperation('subtract');
+      if (e.key === '*') handleOperation('multiply');
+      if (e.key === '/') { e.preventDefault(); handleOperation('divide'); }
+      if (e.key === 'Enter' || e.key === '=') { e.preventDefault(); calculateResult(); }
+      if (e.key === 'Backspace') handleAction('backspace');
+      if (e.key === 'Escape') handleAction('clear');
+      if (e.key === '%') handleAction('percent');
+
+      const keyBtn = document.querySelector(`[data-val="${e.key}"], [data-action="${getKeyboardAction(e.key)}"]`);
+      if (keyBtn) {
+        keyBtn.classList.add('active-key');
+        setTimeout(() => keyBtn.classList.remove('active-key'), 120);
+      }
+    });
+
+    function getKeyboardAction(key) {
+      switch(key) {
+        case '+': return 'add';
+        case '-': return 'subtract';
+        case '*': return 'multiply';
+        case '/': return 'divide';
+        case 'Enter':
+        case '=': return 'equals';
+        case 'Backspace': return 'backspace';
+        case 'Escape': return 'clear';
+        case '%': return 'percent';
+        default: return '';
+      }
+    }
+
+    updateBackground('aurora');
+    applyTheme('indigo');
+    updateDisplay();
+  </script>
+</body>
+</html>
