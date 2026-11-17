@@ -1,0 +1,2644 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculadora y Graficadora Totalmente Personalizable</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            glass: {
+              light: 'rgba(255, 255, 255, 0.7)',
+              dark: 'rgba(30, 41, 59, 0.7)',
+              borderLight: 'rgba(255, 255, 255, 0.4)',
+              borderDark: 'rgba(255, 255, 255, 0.1)',
+            }
+          },
+          boxShadow: {
+            'glass-light': '0 20px 40px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6)',
+            'glass-dark': '0 20px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+            'btn-light': '0 4px 6px -1px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.8)',
+            'btn-dark': '0 4px 6px -1px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05)',
+            'btn-active': 'inset 0 2px 4px rgba(0,0,0,0.2)'
+          }
+        }
+      }
+    }
+  </script>
+  <!-- FontAwesome para iconos -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600;700&family=Playfair+Display:ital,wght@0,500;0,700;1,600&family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --app-font: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      font-family: var(--app-font);
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    /* Aplicación global de tipografía con alta especificidad para sobrescribir font-mono/font-sans */
+    body *:not(.fa):not(.fas):not(.far):not(.fab):not([class*="fa-"]) {
+      font-family: var(--app-font) !important;
+    }
+
+    /* Vista previa individual en botones de selección tipográfica */
+    .font-preview-sans { font-family: 'Inter', sans-serif !important; }
+    .font-preview-mono { font-family: 'JetBrains Mono', monospace !important; }
+    .font-preview-serif { font-family: 'Playfair Display', serif !important; }
+    .font-preview-poppins { font-family: 'Poppins', sans-serif !important; }
+
+    /* Efecto Glassmorphism */
+    .glass-panel {
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+
+    /* Estilo unificado de teclas táctiles para calculadora y controles */
+    .calc-key-surface {
+      transition: transform 0.08s ease, background-color 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease, border-color 0.15s ease;
+    }
+    .calc-key-surface:hover {
+      filter: brightness(1.06);
+    }
+    .calc-key-surface:active, .calc-key-surface.active-key {
+      transform: scale(0.95);
+    }
+
+    /* Pantalla digital miniaturizada reutilizada en paneles */
+    .mini-digital-display {
+      background: rgba(241, 245, 249, 0.85);
+      border: 1px solid rgba(203, 213, 225, 0.6);
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+    }
+    html.dark .mini-digital-display {
+      background: rgba(2, 6, 23, 0.78);
+      border: 1px solid rgba(30, 41, 59, 0.8);
+      box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.45);
+    }
+
+    .btn-press {
+      transition: transform 0.08s ease, background-color 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+    }
+    .btn-press:hover {
+      filter: brightness(1.06);
+    }
+    .btn-press:active, .btn-press.active-key {
+      transform: scale(0.94);
+    }
+
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(156, 163, 175, 0.35);
+      border-radius: 10px;
+    }
+
+    .scientific-drawer {
+      transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out, margin 0.3s ease-in-out;
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+    }
+    .scientific-drawer.open {
+      max-height: 320px;
+      opacity: 1;
+      margin-bottom: 0.75rem;
+    }
+
+    canvas {
+      touch-action: none;
+    }
+
+    .resize-handle {
+      cursor: ns-resize;
+      touch-action: none;
+    }
+
+    /* Estilos de Pantalla Completa Adaptativa */
+    #mainContainer.app-fullscreen {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100dvh;
+      max-width: 100vw !important;
+      border-radius: 0 !important;
+      margin: 0 !important;
+      z-index: 40;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    #mainContainer.app-fullscreen #calculatorTab:not(.hidden) {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    #mainContainer.app-fullscreen #calcMainGrid {
+      flex: 1;
+    }
+    #mainContainer.app-fullscreen .btn-calc {
+      height: 100% !important;
+      min-height: 3rem;
+    }
+
+    @media (orientation: landscape) and (min-width: 640px) {
+      #mainContainer.app-fullscreen #calculatorTab:not(.hidden) {
+        display: grid;
+        grid-template-columns: 1fr 1.35fr;
+        grid-template-rows: auto 1fr;
+        gap: 1rem;
+      }
+      #mainContainer.app-fullscreen #calcTopActions {
+        grid-column: 1 / 2;
+      }
+      #mainContainer.app-fullscreen #calcDisplayBox {
+        grid-column: 1 / 2;
+        height: 100%;
+        margin-bottom: 0;
+        justify-content: center;
+      }
+      #mainContainer.app-fullscreen #calcDisplayBox #mainDisplay {
+        font-size: 3.25rem;
+      }
+      #mainContainer.app-fullscreen #calcKeypadArea {
+        grid-column: 2 / 3;
+        grid-row: 1 / 3;
+        display: flex;
+        flex-direction: column;
+      }
+    }
+
+    #mainContainer.app-fullscreen #grapherTab:not(.hidden) {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    #mainContainer.app-fullscreen #canvasWrapper {
+      flex: 1;
+      min-height: 220px;
+    }
+    #mainContainer.app-fullscreen #graphCanvas {
+      height: 100% !important;
+      flex: 1;
+    }
+
+    /* Sliders Personalizados con estilo táctil */
+    input[type=range].custom-slider {
+      -webkit-appearance: none;
+      background: transparent;
+    }
+    input[type=range].custom-slider::-webkit-slider-runnable-track {
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.3);
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
+    }
+    input[type=range].custom-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 16px;
+      width: 16px;
+      border-radius: 50%;
+      background: var(--accent-color, #6366f1);
+      border: 2px solid #ffffff;
+      margin-top: -5px;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+      transition: transform 0.12s ease;
+    }
+    input[type=range].custom-slider::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+    }
+
+    /* Espectro HSV interactivo */
+    .hsv-sat-val-box {
+      position: relative;
+      background:
+        linear-gradient(to top, #000, transparent),
+        linear-gradient(to right, #fff, hsl(var(--hsv-hue, 239), 100%, 50%));
+      touch-action: none;
+    }
+    .hsv-hue-strip {
+      position: relative;
+      background: linear-gradient(to right, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
+      touch-action: none;
+    }
+  </style>
+</head>
+<body id="appBg" class="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 text-slate-800 dark:text-slate-100 flex items-center justify-center p-2 sm:p-4 transition-all duration-500">
+
+  <!-- Contenedor Principal -->
+  <div id="mainContainer" class="relative w-full max-w-md bg-white/75 dark:bg-slate-900/75 border border-white/50 dark:border-slate-700/50 rounded-3xl p-4 sm:p-6 shadow-glass-light dark:shadow-glass-dark glass-panel transition-all duration-300">
+
+    <!-- Selector de Pestañas Superior -->
+    <div class="flex justify-between items-center mb-3.5 gap-2">
+      <div class="flex space-x-1 p-1 bg-slate-200/70 dark:bg-slate-800/70 border border-white/40 dark:border-slate-700/50 rounded-2xl shadow-inner">
+        <button id="tabCalcBtn" type="button" class="px-3 py-1.5 text-xs font-bold rounded-xl bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 shadow-btn-light dark:shadow-btn-dark transition-all flex items-center space-x-1.5">
+          <i class="fas fa-calculator text-[11px] id-nav-icon"></i>
+          <span>Calculadora</span>
+        </button>
+        <button id="tabGraphBtn" type="button" class="px-3 py-1.5 text-xs font-bold rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-all flex items-center space-x-1.5">
+          <i class="fas fa-chart-line text-[11px]"></i>
+          <span>Graficadora</span>
+        </button>
+      </div>
+
+      <!-- Controles de Configuración con diseño de tecla -->
+      <div class="flex items-center space-x-1.5">
+        <button id="fullscreenToggleBtn" type="button" class="ui-key w-8 h-8 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/50 text-slate-700 dark:text-slate-200 flex items-center justify-center transition-all btn-press shadow-btn-light dark:shadow-btn-dark" title="Pantalla Completa">
+          <i id="fullscreenIcon" class="fas fa-expand text-xs"></i>
+        </button>
+        <button id="themeToggleBtn" type="button" class="ui-key w-8 h-8 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/50 text-slate-700 dark:text-slate-200 flex items-center justify-center transition-all btn-press shadow-btn-light dark:shadow-btn-dark" title="Modo Claro/Oscuro">
+          <i id="themeIcon" class="fas fa-moon text-xs"></i>
+        </button>
+        <button id="soundMenuBtn" type="button" class="ui-key w-8 h-8 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/50 text-slate-700 dark:text-slate-200 flex items-center justify-center transition-all btn-press shadow-btn-light dark:shadow-btn-dark relative" title="Estudio de Sonido y Vibración">
+          <i id="soundIcon" class="fas fa-volume-up text-xs"></i>
+        </button>
+        <button id="colorMenuBtn" type="button" class="ui-key w-8 h-8 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/50 text-slate-700 dark:text-slate-200 flex items-center justify-center transition-all btn-press shadow-btn-light dark:shadow-btn-dark" title="Personalizar Apariencia">
+          <i class="fas fa-palette text-xs"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- PANEL DESPLEGABLE DE ESTUDIO DE SONIDO (Coherente con el diseño táctil y cristalino) -->
+    <div id="soundPanel" class="hidden flex flex-col space-y-3 mb-4 p-3.5 bg-white/65 dark:bg-slate-900/65 glass-panel rounded-2xl border border-white/50 dark:border-slate-700/60 shadow-glass-light dark:shadow-glass-dark transition-all">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-200/60 dark:border-slate-700/60">
+        <span class="text-xs font-bold tracking-wide text-slate-700 dark:text-slate-200 flex items-center">
+          <i class="fas fa-music mr-1.5 text-indigo-500 id-sound-accent"></i> Estudio de Sonido
+        </span>
+        <div class="flex items-center space-x-1.5">
+          <button id="testChordBtn" type="button" class="ui-key text-[11px] font-bold px-2.5 py-1 rounded-xl bg-white/85 dark:bg-slate-800/90 border border-slate-200/60 dark:border-slate-700/50 text-indigo-600 dark:text-indigo-300 shadow-btn-light dark:shadow-btn-dark btn-press">
+            <i class="fas fa-play text-[9px] mr-1"></i>Probar
+          </button>
+          <button id="muteQuickBtn" type="button" class="ui-key text-[11px] font-bold px-2.5 py-1 rounded-xl bg-slate-200/80 dark:bg-slate-700/80 border border-slate-300/40 dark:border-slate-600/40 text-slate-700 dark:text-slate-200 shadow-btn-light dark:shadow-btn-dark btn-press">
+            Silenciar
+          </button>
+        </div>
+      </div>
+
+      <!-- Sliders con displays digitales integrados -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div class="mini-digital-display flex items-center space-x-2 px-2.5 py-2 rounded-xl">
+          <i class="fas fa-volume-down text-xs text-slate-400"></i>
+          <input type="range" id="volumeSlider" min="0" max="100" value="70" class="custom-slider flex-1">
+          <span id="volumeValueLabel" class="text-[11px] font-bold w-9 text-right text-slate-800 dark:text-slate-100">70%</span>
+        </div>
+
+        <div class="mini-digital-display flex items-center space-x-2 px-2.5 py-2 rounded-xl" title="Tono / Afinación">
+          <i class="fas fa-wave-square text-xs text-slate-400"></i>
+          <input type="range" id="pitchSlider" min="60" max="150" value="100" class="custom-slider flex-1">
+          <span id="pitchValueLabel" class="text-[11px] font-bold w-9 text-right text-slate-800 dark:text-slate-100">1.0x</span>
+        </div>
+      </div>
+
+      <!-- Teclado de Selección de Instrumentos -->
+      <div>
+        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 block">Instrumento / Estilo</span>
+        <div class="grid grid-cols-4 gap-1.5">
+          <button type="button" class="sound-pack-opt ui-key py-2 px-1.5 rounded-xl text-[11px] font-bold shadow-btn-light dark:shadow-btn-dark btn-press truncate" data-pack="crystal">Cristal</button>
+          <button type="button" class="sound-pack-opt ui-key py-2 px-1.5 rounded-xl text-[11px] font-bold shadow-btn-light dark:shadow-btn-dark btn-press truncate" data-pack="marimba">Marimba</button>
+          <button type="button" class="sound-pack-opt ui-key py-2 px-1.5 rounded-xl text-[11px] font-bold shadow-btn-light dark:shadow-btn-dark btn-press truncate" data-pack="piano">Piano</button>
+          <button type="button" class="sound-pack-opt ui-key py-2 px-1.5 rounded-xl text-[11px] font-bold shadow-btn-light dark:shadow-btn-dark btn-press truncate" data-pack="mechanical">Mecánico</button>
+          <button type="button" class="sound-pack-opt ui-key py-2 px-1.5 rounded-xl text-[11px] font-bold shadow-btn-light dark:shadow-btn-dark btn-press truncate" data-pack="retro">8-Bit</button>
+          <button type="button" class="sound-pack-opt ui-key py-2 px-1.5 rounded-xl text-[11px] font-bold shadow-btn-light dark:shadow-btn-dark btn-press truncate" data-pack="bubble">Burbuja</button>
+          <button type="button" class="sound-pack-opt ui-key py-2 px-1.5 rounded-xl text-[11px] font-bold shadow-btn-light dark:shadow-btn-dark btn-press truncate" data-pack="laser">Láser</button>
+          <button type="button" class="sound-pack-opt ui-key py-2 px-1.5 rounded-xl text-[11px] font-bold shadow-btn-light dark:shadow-btn-dark btn-press truncate" data-pack="zen">Zen</button>
+        </div>
+      </div>
+
+      <!-- Teclas de Efecto y Háptica -->
+      <div class="grid grid-cols-2 gap-2 pt-1 border-t border-slate-200/60 dark:border-slate-700/60">
+        <button id="echoToggleBtn" type="button" class="ui-key flex items-center justify-between px-3 py-2 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/50 text-[11px] font-bold text-slate-700 dark:text-slate-200 shadow-btn-light dark:shadow-btn-dark btn-press">
+          <span><i class="fas fa-broadcast-tower mr-1.5 text-indigo-400"></i>Eco Espacial</span>
+          <span id="echoStatusBadge" class="text-[10px] px-1.5 py-0.5 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400">OFF</span>
+        </button>
+        <button id="hapticToggleBtn" type="button" class="ui-key flex items-center justify-between px-3 py-2 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/50 text-[11px] font-bold text-slate-700 dark:text-slate-200 shadow-btn-light dark:shadow-btn-dark btn-press">
+          <span><i class="fas fa-mobile-alt mr-1.5 text-emerald-400"></i>Vibración</span>
+          <span id="hapticStatusBadge" class="text-[10px] px-1.5 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">ON</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- MENÚ DESPLEGABLE DE PERSONALIZACIÓN VISUAL (Mismo diseño táctil + Estudio de Color Avanzado) -->
+    <div id="colorPalette" class="hidden flex flex-col space-y-3 mb-4 p-3.5 bg-white/65 dark:bg-slate-900/65 glass-panel rounded-2xl border border-white/50 dark:border-slate-700/60 shadow-glass-light dark:shadow-glass-dark transition-all">
+      <!-- Barra superior de subpestañas con estilo teclado -->
+      <div class="flex justify-between items-center pb-2 border-b border-slate-200/60 dark:border-slate-700/60 gap-1">
+        <div class="flex space-x-1 bg-slate-200/70 dark:bg-slate-800/70 p-1 rounded-xl border border-white/30 dark:border-slate-700/40 shadow-inner">
+          <button type="button" class="custom-tab-btn px-2.5 py-1 text-[11px] font-bold rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-btn-light dark:shadow-btn-dark transition-all" data-customtab="themes">
+            <i class="fas fa-swatchbook mr-1 text-indigo-500"></i>Temas
+          </button>
+          <button type="button" class="custom-tab-btn px-2.5 py-1 text-[11px] font-bold rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-all" data-customtab="customcolors">
+            <i class="fas fa-eye-dropper mr-1 text-pink-500"></i>Estudio Color
+          </button>
+          <button type="button" class="custom-tab-btn px-2.5 py-1 text-[11px] font-bold rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-all" data-customtab="style">
+            <i class="fas fa-sliders-h mr-1 text-emerald-500"></i>Estilo
+          </button>
+        </div>
+        <button id="resetAllCustomBtn" type="button" class="ui-key text-[10px] font-bold text-rose-500 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 px-2 py-1 rounded-xl btn-press">
+          <i class="fas fa-undo-alt mr-0.5"></i>Reset
+        </button>
+      </div>
+
+      <!-- SUBPESTAÑA 1: TEMAS Y PALETAS DE ARMONÍA RÁPIDA -->
+      <div id="panel-themes" class="space-y-3">
+        <div>
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 block">Paletas Maestras (1 Clic)</span>
+          <div class="grid grid-cols-4 gap-1.5">
+            <button type="button" class="preset-palette-btn ui-key py-1.5 px-2 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/50 text-[10px] font-bold flex items-center justify-between shadow-btn-light dark:shadow-btn-dark btn-press" data-preset="neon">
+              <span>Neón</span>
+              <span class="w-2.5 h-2.5 rounded-full bg-fuchsia-500 shadow"></span>
+            </button>
+            <button type="button" class="preset-palette-btn ui-key py-1.5 px-2 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/50 text-[10px] font-bold flex items-center justify-between shadow-btn-light dark:shadow-btn-dark btn-press" data-preset="obsidian">
+              <span>Obsidiana</span>
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-400 shadow"></span>
+            </button>
+            <button type="button" class="preset-palette-btn ui-key py-1.5 px-2 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/50 text-[10px] font-bold flex items-center justify-between shadow-btn-light dark:shadow-btn-dark btn-press" data-preset="pastel">
+              <span>Pastel</span>
+              <span class="w-2.5 h-2.5 rounded-full bg-pink-300 shadow"></span>
+            </button>
+            <button type="button" class="preset-palette-btn ui-key py-1.5 px-2 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/50 text-[10px] font-bold flex items-center justify-between shadow-btn-light dark:shadow-btn-dark btn-press" data-preset="emerald">
+              <span>Esmeralda</span>
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow"></span>
+            </button>
+            <button type="button" class="preset-palette-btn ui-key py-1.5 px-2 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/50 text-[10px] font-bold flex items-center justify-between shadow-btn-light dark:shadow-btn-dark btn-press" data-preset="solar">
+              <span>Solar</span>
+              <span class="w-2.5 h-2.5 rounded-full bg-orange-500 shadow"></span>
+            </button>
+            <button type="button" class="preset-palette-btn ui-key py-1.5 px-2 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/50 text-[10px] font-bold flex items-center justify-between shadow-btn-light dark:shadow-btn-dark btn-press" data-preset="cyberpunk">
+              <span>Cyber</span>
+              <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow"></span>
+            </button>
+            <button type="button" class="preset-palette-btn ui-key py-1.5 px-2 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/50 text-[10px] font-bold flex items-center justify-between shadow-btn-light dark:shadow-btn-dark btn-press" data-preset="arctic">
+              <span>Ártico</span>
+              <span class="w-2.5 h-2.5 rounded-full bg-sky-400 shadow"></span>
+            </button>
+            <button type="button" class="preset-palette-btn ui-key py-1.5 px-2 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/50 text-[10px] font-bold flex items-center justify-between shadow-btn-light dark:shadow-btn-dark btn-press" data-preset="crimson">
+              <span>Carmesí</span>
+              <span class="w-2.5 h-2.5 rounded-full bg-rose-600 shadow"></span>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 block">Fondo Ambiental</span>
+          <div class="grid grid-cols-8 gap-1.5">
+            <button type="button" class="bg-opt h-6 rounded-xl bg-gradient-to-br from-indigo-300 to-pink-300 dark:from-slate-950 dark:to-indigo-950 border border-slate-300 dark:border-slate-600 shadow-sm btn-press" data-bg="aurora" title="Aurora"></button>
+            <button type="button" class="bg-opt h-6 rounded-xl bg-gradient-to-br from-fuchsia-600 to-cyan-500 border border-slate-300 dark:border-slate-600 shadow-sm btn-press" data-bg="cyberpunk" title="Cyberpunk"></button>
+            <button type="button" class="bg-opt h-6 rounded-xl bg-gradient-to-br from-slate-100 to-slate-300 dark:from-slate-900 dark:to-slate-800 border border-slate-300 dark:border-slate-600 shadow-sm btn-press" data-bg="minimal" title="Minimal"></button>
+            <button type="button" class="bg-opt h-6 rounded-xl bg-gradient-to-br from-slate-950 to-blue-950 border border-slate-300 dark:border-slate-600 shadow-sm btn-press" data-bg="midnight" title="Medianoche"></button>
+            <button type="button" class="bg-opt h-6 rounded-xl bg-gradient-to-br from-rose-400 to-orange-300 dark:from-amber-950 dark:to-rose-950 border border-slate-300 dark:border-slate-600 shadow-sm btn-press" data-bg="sunset" title="Atardecer"></button>
+            <button type="button" class="bg-opt h-6 rounded-xl bg-gradient-to-br from-emerald-300 to-teal-600 dark:from-emerald-950 dark:to-slate-950 border border-slate-300 dark:border-slate-600 shadow-sm btn-press" data-bg="forest" title="Bosque"></button>
+            <button type="button" class="bg-opt h-6 rounded-xl bg-gradient-to-br from-sky-300 to-blue-600 dark:from-sky-950 dark:to-slate-950 border border-slate-300 dark:border-slate-600 shadow-sm btn-press" data-bg="ocean" title="Océano"></button>
+            <button type="button" class="bg-opt h-6 rounded-xl bg-gradient-to-br from-purple-300 to-violet-500 dark:from-violet-950 dark:to-slate-950 border border-slate-300 dark:border-slate-600 shadow-sm btn-press" data-bg="lavender" title="Lavanda"></button>
+          </div>
+        </div>
+
+        <div>
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 block">Color de Acento Rápido</span>
+          <div class="flex justify-between items-center px-0.5">
+            <button type="button" class="color-opt w-6 h-6 rounded-full bg-indigo-500 shadow-sm btn-press" data-theme="indigo"></button>
+            <button type="button" class="color-opt w-6 h-6 rounded-full bg-emerald-500 shadow-sm btn-press" data-theme="emerald"></button>
+            <button type="button" class="color-opt w-6 h-6 rounded-full bg-rose-500 shadow-sm btn-press" data-theme="rose"></button>
+            <button type="button" class="color-opt w-6 h-6 rounded-full bg-amber-500 shadow-sm btn-press" data-theme="amber"></button>
+            <button type="button" class="color-opt w-6 h-6 rounded-full bg-cyan-500 shadow-sm btn-press" data-theme="cyan"></button>
+            <button type="button" class="color-opt w-6 h-6 rounded-full bg-violet-500 shadow-sm btn-press" data-theme="violet"></button>
+            <button type="button" class="color-opt w-6 h-6 rounded-full bg-fuchsia-500 shadow-sm btn-press" data-theme="fuchsia"></button>
+            <button type="button" class="color-opt w-6 h-6 rounded-full bg-orange-500 shadow-sm btn-press" data-theme="orange"></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUBPESTAÑA 2: ESTUDIO DE COLOR AVANZADO (HSV + Elementos por separado + Degradado + Auto-contraste) -->
+      <div id="panel-customcolors" class="hidden space-y-2.5">
+        <!-- Cabecera con acciones rápidas -->
+        <div class="flex flex-wrap items-center justify-between gap-1.5">
+          <div class="flex items-center space-x-1.5">
+            <button id="randomHarmonyBtn" type="button" class="ui-key px-2.5 py-1 rounded-xl bg-white/85 dark:bg-slate-800/90 border border-slate-200/60 dark:border-slate-700/50 text-[10px] font-bold text-indigo-600 dark:text-indigo-300 shadow-btn-light dark:shadow-btn-dark btn-press flex items-center space-x-1">
+              <i class="fas fa-dice"></i>
+              <span>Armonía Aleatoria</span>
+            </button>
+            <button id="autoContrastToggleBtn" type="button" class="ui-key px-2.5 py-1 rounded-xl bg-white/85 dark:bg-slate-800/90 border border-slate-200/60 dark:border-slate-700/50 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 shadow-btn-light dark:shadow-btn-dark btn-press flex items-center space-x-1" title="Ajusta automáticamente el color del texto para máxima legibilidad">
+              <i class="fas fa-adjust"></i>
+              <span id="autoContrastLabel">Auto-Contraste: ON</span>
+            </button>
+          </div>
+          <span id="customColorBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 hidden">Activo</span>
+        </div>
+
+        <!-- Selector de Zona / Elemento a pintar (estilo teclado táctil) -->
+        <div>
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1 block">1. Elige el elemento a personalizar</span>
+          <div class="grid grid-cols-3 gap-1">
+            <button type="button" class="color-target-btn ui-key px-2 py-1.5 rounded-xl text-[10px] font-bold flex items-center justify-between border shadow-btn-light dark:shadow-btn-dark btn-press" data-target="bg">
+              <span class="truncate">Fondo 1</span>
+              <span id="swatch-bg" class="w-3 h-3 rounded-full border border-white/50 shrink-0"></span>
+            </button>
+            <button type="button" class="color-target-btn ui-key px-2 py-1.5 rounded-xl text-[10px] font-bold flex items-center justify-between border shadow-btn-light dark:shadow-btn-dark btn-press" data-target="bg2">
+              <span class="truncate">Fondo 2</span>
+              <span id="swatch-bg2" class="w-3 h-3 rounded-full border border-white/50 shrink-0"></span>
+            </button>
+            <button type="button" class="color-target-btn ui-key px-2 py-1.5 rounded-xl text-[10px] font-bold flex items-center justify-between border shadow-btn-light dark:shadow-btn-dark btn-press" data-target="panel">
+              <span class="truncate">Panel Cristal</span>
+              <span id="swatch-panel" class="w-3 h-3 rounded-full border border-white/50 shrink-0"></span>
+            </button>
+            <button type="button" class="color-target-btn ui-key px-2 py-1.5 rounded-xl text-[10px] font-bold flex items-center justify-between border shadow-btn-light dark:shadow-btn-dark btn-press" data-target="display">
+              <span class="truncate">Pantalla</span>
+              <span id="swatch-display" class="w-3 h-3 rounded-full border border-white/50 shrink-0"></span>
+            </button>
+            <button type="button" class="color-target-btn ui-key px-2 py-1.5 rounded-xl text-[10px] font-bold flex items-center justify-between border shadow-btn-light dark:shadow-btn-dark btn-press" data-target="num">
+              <span class="truncate">Números</span>
+              <span id="swatch-num" class="w-3 h-3 rounded-full border border-white/50 shrink-0"></span>
+            </button>
+            <button type="button" class="color-target-btn ui-key px-2 py-1.5 rounded-xl text-[10px] font-bold flex items-center justify-between border shadow-btn-light dark:shadow-btn-dark btn-press" data-target="op">
+              <span class="truncate">Operadores</span>
+              <span id="swatch-op" class="w-3 h-3 rounded-full border border-white/50 shrink-0"></span>
+            </button>
+            <button type="button" class="color-target-btn ui-key px-2 py-1.5 rounded-xl text-[10px] font-bold flex items-center justify-between border shadow-btn-light dark:shadow-btn-dark btn-press" data-target="func">
+              <span class="truncate">Funciones</span>
+              <span id="swatch-func" class="w-3 h-3 rounded-full border border-white/50 shrink-0"></span>
+            </button>
+            <button type="button" class="color-target-btn ui-key px-2 py-1.5 rounded-xl text-[10px] font-bold flex items-center justify-between border shadow-btn-light dark:shadow-btn-dark btn-press" data-target="equals">
+              <span class="truncate">Botón Igual</span>
+              <span id="swatch-equals" class="w-3 h-3 rounded-full border border-white/50 shrink-0"></span>
+            </button>
+            <button type="button" class="color-target-btn ui-key px-2 py-1.5 rounded-xl text-[10px] font-bold flex items-center justify-between border shadow-btn-light dark:shadow-btn-dark btn-press" data-target="stroke">
+              <span class="truncate">Gráfica</span>
+              <span id="swatch-stroke" class="w-3 h-3 rounded-full border border-white/50 shrink-0"></span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Espectro Visual HSV Interactivo -->
+        <div class="p-2.5 rounded-2xl bg-slate-200/50 dark:bg-slate-950/50 border border-slate-300/40 dark:border-slate-800/70 space-y-2">
+          <div class="flex justify-between items-center text-[10px]">
+            <span class="font-bold text-slate-500 dark:text-slate-400">2. Espectro de Color (<span id="activeTargetName" class="text-indigo-500 dark:text-indigo-400">Botón Igual</span>)</span>
+            <span id="liveContrastHint" class="text-[9px] font-semibold text-slate-400">Contraste óptimo</span>
+          </div>
+
+          <!-- Plano Saturación / Brillo -->
+          <div id="hsvSatValBox" class="hsv-sat-val-box w-full h-24 rounded-xl cursor-crosshair border border-white/20 shadow-inner">
+            <div id="hsvCursor" class="w-3.5 h-3.5 rounded-full border-2 border-white shadow-md pointer-events-none absolute -translate-x-1/2 -translate-y-1/2" style="left: 70%; top: 20%;"></div>
+          </div>
+
+          <!-- Barra de Matiz (Hue) -->
+          <div id="hsvHueStrip" class="hsv-hue-strip w-full h-3.5 rounded-full cursor-ew-resize border border-white/20 shadow-inner">
+            <div id="hsvHueCursor" class="w-3.5 h-3.5 rounded-full bg-white border-2 border-slate-900 shadow pointer-events-none absolute top-1/2 -translate-x-1/2 -translate-y-1/2" style="left: 66%;"></div>
+          </div>
+
+          <!-- Display Digital de Código HEX + Selector Nativo + Copiar -->
+          <div class="flex items-center space-x-1.5">
+            <div class="mini-digital-display flex-1 flex items-center px-2.5 py-1.5 rounded-xl">
+              <span class="text-[11px] font-bold text-slate-400 mr-1">#</span>
+              <input type="text" id="hexCodeInput" maxlength="6" value="6366F1" class="w-full bg-transparent text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-100 focus:outline-none" aria-label="Código HEX">
+              <button id="copyHexBtn" type="button" class="text-slate-400 hover:text-indigo-500 text-xs px-1 transition-colors" title="Copiar código HEX">
+                <i id="copyHexIcon" class="fas fa-copy"></i>
+              </button>
+            </div>
+            <label class="ui-key h-8 px-2.5 rounded-xl bg-white/85 dark:bg-slate-800/90 border border-slate-200/60 dark:border-slate-700/50 flex items-center justify-center cursor-pointer shadow-btn-light dark:shadow-btn-dark btn-press" title="Selector nativo del sistema">
+              <input type="color" id="nativeColorSync" value="#6366f1" class="w-5 h-5 rounded border-0 cursor-pointer bg-transparent">
+            </label>
+          </div>
+        </div>
+
+        <!-- Control de Degradado de Fondo -->
+        <div class="flex items-center justify-between gap-2 p-2 rounded-xl bg-white/60 dark:bg-slate-800/60 border border-slate-200/50 dark:border-slate-700/50 text-[10px]">
+          <div class="flex items-center space-x-1.5">
+            <i class="fas fa-fill-drip text-indigo-400"></i>
+            <span class="font-bold text-slate-600 dark:text-slate-300">Degradado Fondo:</span>
+          </div>
+          <div class="flex items-center space-x-1">
+            <button type="button" class="grad-dir-btn px-2 py-0.5 rounded-lg font-bold bg-indigo-500 text-white" data-dir="135deg">↘</button>
+            <button type="button" class="grad-dir-btn px-2 py-0.5 rounded-lg font-bold bg-slate-200/80 dark:bg-slate-700 text-slate-600 dark:text-slate-300" data-dir="180deg">↓</button>
+            <button type="button" class="grad-dir-btn px-2 py-0.5 rounded-lg font-bold bg-slate-200/80 dark:bg-slate-700 text-slate-600 dark:text-slate-300" data-dir="90deg">→</button>
+            <button type="button" class="grad-dir-btn px-2 py-0.5 rounded-lg font-bold bg-slate-200/80 dark:bg-slate-700 text-slate-600 dark:text-slate-300" data-dir="radial">◉</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUBPESTAÑA 3: ESTILO Y TIPOGRAFÍA -->
+      <div id="panel-style" class="hidden space-y-3">
+        <div class="grid grid-cols-1 gap-2.5">
+          <div>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 block">Forma de Teclas y Controles</span>
+            <div class="grid grid-cols-3 gap-1.5 bg-slate-200/60 dark:bg-slate-800/60 p-1 rounded-2xl border border-white/30 dark:border-slate-700/40 shadow-inner">
+              <button type="button" class="shape-opt py-1.5 text-[11px] font-bold rounded-xl bg-white dark:bg-slate-700 shadow-btn-light dark:shadow-btn-dark btn-press" data-shape="rounded-2xl">Suave</button>
+              <button type="button" class="shape-opt py-1.5 text-[11px] font-bold rounded-xl text-slate-500 btn-press" data-shape="rounded-full">Píldora</button>
+              <button type="button" class="shape-opt py-1.5 text-[11px] font-bold rounded-xl text-slate-500 btn-press" data-shape="rounded-md">Recto</button>
+            </div>
+          </div>
+
+          <div>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 block">Tipografía Global (Vista Previa)</span>
+            <div class="grid grid-cols-4 gap-1.5 bg-slate-200/60 dark:bg-slate-800/60 p-1 rounded-2xl border border-white/30 dark:border-slate-700/40 shadow-inner">
+              <button type="button" class="font-opt font-preview-sans py-1.5 text-[11px] font-bold rounded-xl bg-white dark:bg-slate-700 shadow-btn-light dark:shadow-btn-dark btn-press flex flex-col items-center leading-tight" data-font="sans">
+                <span class="text-xs">Aa</span>
+                <span class="text-[9px] opacity-75">Sans</span>
+              </button>
+              <button type="button" class="font-opt font-preview-mono py-1.5 text-[11px] font-bold rounded-xl text-slate-500 btn-press flex flex-col items-center leading-tight" data-font="mono">
+                <span class="text-xs">01</span>
+                <span class="text-[9px] opacity-75">Mono</span>
+              </button>
+              <button type="button" class="font-opt font-preview-serif py-1.5 text-[11px] font-bold rounded-xl text-slate-500 btn-press flex flex-col items-center leading-tight" data-font="serif">
+                <span class="text-xs">ƒx</span>
+                <span class="text-[9px] opacity-75">Serif</span>
+              </button>
+              <button type="button" class="font-opt font-preview-poppins py-1.5 text-[11px] font-bold rounded-xl text-slate-500 btn-press flex flex-col items-center leading-tight" data-font="poppins">
+                <span class="text-xs">Pop</span>
+                <span class="text-[9px] opacity-75">Modern</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-2 pt-2 border-t border-slate-200/60 dark:border-slate-700/60">
+          <div class="mini-digital-display px-3 py-2 rounded-xl space-y-1">
+            <div class="flex items-center justify-between text-[10px]">
+              <span class="font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Opacidad Panel Cristal</span>
+              <span id="glassOpacityVal" class="font-bold text-slate-800 dark:text-slate-100">75%</span>
+            </div>
+            <input type="range" id="glassOpacitySlider" min="45" max="98" value="75" class="custom-slider w-full">
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <div class="mini-digital-display px-2.5 py-2 rounded-xl space-y-1">
+              <div class="flex justify-between text-[10px] text-slate-500 dark:text-slate-400">
+                <span class="font-bold">Pantalla</span>
+                <span id="dispSizeVal" class="font-bold text-slate-800 dark:text-slate-100">36px</span>
+              </div>
+              <input type="range" id="displaySizeSlider" min="24" max="52" value="36" class="custom-slider w-full">
+            </div>
+            <div class="mini-digital-display px-2.5 py-2 rounded-xl space-y-1">
+              <div class="flex justify-between text-[10px] text-slate-500 dark:text-slate-400">
+                <span class="font-bold">Teclas</span>
+                <span id="btnSizeVal" class="font-bold text-slate-800 dark:text-slate-100">16px</span>
+              </div>
+              <input type="range" id="btnSizeSlider" min="13" max="22" value="16" class="custom-slider w-full">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PESTAÑA 1: CALCULADORA -->
+    <div id="calculatorTab" class="block">
+      <div id="calcTopActions" class="flex justify-between items-center mb-3">
+        <button id="scientificToggleBtn" type="button" class="ui-key h-8 px-3 text-xs font-bold rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/50 text-slate-700 dark:text-slate-200 flex items-center justify-center transition-all btn-press shadow-btn-light dark:shadow-btn-dark">
+          <span>Científica</span>
+          <i class="fas fa-chevron-down ml-1.5 text-[10px] transition-transform duration-300" id="sciIcon"></i>
+        </button>
+        <button id="historyToggleBtn" type="button" class="ui-key h-8 px-3 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/50 text-slate-700 dark:text-slate-200 flex items-center justify-center space-x-1.5 transition-all btn-press shadow-btn-light dark:shadow-btn-dark relative">
+          <i class="fas fa-history text-xs"></i>
+          <span class="text-xs font-bold">Historial</span>
+        </button>
+      </div>
+
+      <!-- Pantalla de Display -->
+      <div id="calcDisplayBox" class="bg-slate-100/80 dark:bg-slate-950/80 rounded-2xl p-4 mb-4 text-right border border-slate-200/50 dark:border-slate-800/50 shadow-inner flex flex-col justify-end min-h-[110px] overflow-hidden relative transition-colors duration-200">
+        <div class="flex justify-between items-center h-6 mb-1">
+          <span id="memoryIndicator" class="text-xs font-bold px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-500 dark:text-indigo-400 opacity-0 transition-opacity">M</span>
+          <div id="expressionDisplay" class="text-xs sm:text-sm text-slate-400 dark:text-slate-500 font-medium overflow-x-auto whitespace-nowrap scrollbar-none"></div>
+        </div>
+        <div id="mainDisplay" class="text-3xl sm:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-100 overflow-x-auto whitespace-nowrap scrollbar-none transition-all">
+          0
+        </div>
+      </div>
+
+      <!-- Área de Teclado -->
+      <div id="calcKeypadArea" class="flex flex-col">
+        <div id="scientificDrawer" class="scientific-drawer grid grid-cols-4 gap-2">
+          <button type="button" class="btn-calc btn-mem" data-action="mc">MC</button>
+          <button type="button" class="btn-calc btn-mem" data-action="mr">MR</button>
+          <button type="button" class="btn-calc btn-mem" data-action="m-add">M+</button>
+          <button type="button" class="btn-calc btn-mem" data-action="m-sub">M-</button>
+          <button type="button" class="btn-calc btn-sci" data-action="sin">sin</button>
+          <button type="button" class="btn-calc btn-sci" data-action="cos">cos</button>
+          <button type="button" class="btn-calc btn-sci" data-action="tan">tan</button>
+          <button type="button" class="btn-calc btn-sci" data-action="log">log</button>
+          <button type="button" class="btn-calc btn-sci" data-action="ln">ln</button>
+          <button type="button" class="btn-calc btn-sci" data-action="sqrt">√</button>
+          <button type="button" class="btn-calc btn-sci" data-action="pow">x²</button>
+          <button type="button" class="btn-calc btn-sci" data-action="pi">π</button>
+        </div>
+
+        <div id="calcMainGrid" class="grid grid-cols-4 gap-2.5 sm:gap-3">
+          <button type="button" class="btn-calc btn-func" data-action="clear">AC</button>
+          <button type="button" class="btn-calc btn-func" data-action="backspace"><i class="fas fa-backspace"></i></button>
+          <button type="button" class="btn-calc btn-func" data-action="percent">%</button>
+          <button type="button" class="btn-calc btn-op" data-action="divide">÷</button>
+          <button type="button" class="btn-calc btn-num" data-val="7">7</button>
+          <button type="button" class="btn-calc btn-num" data-val="8">8</button>
+          <button type="button" class="btn-calc btn-num" data-val="9">9</button>
+          <button type="button" class="btn-calc btn-op" data-action="multiply">×</button>
+          <button type="button" class="btn-calc btn-num" data-val="4">4</button>
+          <button type="button" class="btn-calc btn-num" data-val="5">5</button>
+          <button type="button" class="btn-calc btn-num" data-val="6">6</button>
+          <button type="button" class="btn-calc btn-op" data-action="subtract">-</button>
+          <button type="button" class="btn-calc btn-num" data-val="1">1</button>
+          <button type="button" class="btn-calc btn-num" data-val="2">2</button>
+          <button type="button" class="btn-calc btn-num" data-val="3">3</button>
+          <button type="button" class="btn-calc btn-op" data-action="add">+</button>
+          <button type="button" class="btn-calc btn-num" data-action="toggle-sign">±</button>
+          <button type="button" class="btn-calc btn-num" data-val="0">0</button>
+          <button type="button" class="btn-calc btn-num" data-val=".">.</button>
+          <button type="button" class="btn-calc btn-equals" data-action="equals">=</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PESTAÑA 2: GRAFICADORA 2D -->
+    <div id="grapherTab" class="hidden">
+      <div class="flex flex-wrap justify-between items-center gap-2 mb-2.5">
+        <span class="text-xs font-bold text-slate-600 dark:text-slate-300 flex items-center">
+          <i class="fas fa-wave-square mr-1.5 text-indigo-500 id-graph-icon"></i>
+          Plano Cartesiano
+        </span>
+        
+        <div id="graphSizeControls" class="flex items-center space-x-1 bg-slate-200/70 dark:bg-slate-800/80 p-1 rounded-xl">
+          <button type="button" class="size-preset px-2 py-1 text-[10px] font-bold rounded-lg transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white" data-height="200">S</button>
+          <button type="button" class="size-preset px-2 py-1 text-[10px] font-bold rounded-lg transition-all bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm" data-height="280">M</button>
+          <button type="button" class="size-preset px-2 py-1 text-[10px] font-bold rounded-lg transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white" data-height="400">L</button>
+          <div class="w-[1px] h-3.5 bg-slate-300 dark:bg-slate-600 mx-0.5"></div>
+          <button id="expandWidthBtn" type="button" class="px-2 py-1 text-[10px] font-bold rounded-lg transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center space-x-1">
+            <i id="expandWidthIcon" class="fas fa-arrows-alt-h"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="mb-2.5">
+        <div class="flex space-x-2">
+          <div class="relative flex-1 flex items-center bg-slate-100/90 dark:bg-slate-950/80 border border-slate-200/80 dark:border-slate-800 rounded-xl focus-within:ring-2 focus-within:ring-indigo-500 shadow-inner overflow-hidden">
+            <span class="pl-3 pr-2 py-2 text-xs font-bold text-indigo-500 dark:text-indigo-400 bg-slate-200/50 dark:bg-slate-900/80 border-r border-slate-200/60 dark:border-slate-800 select-none">f(x) =</span>
+            <input type="text" id="functionInput" value="sin(x) * 2" placeholder="Escribe una función, ej: x^2 - 3" class="w-full px-2.5 py-2 text-sm bg-transparent focus:outline-none font-semibold text-slate-800 dark:text-slate-100">
+            <button id="clearFuncBtn" type="button" class="pr-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs">
+              <i class="fas fa-times-circle"></i>
+            </button>
+          </div>
+          <button id="plotBtn" type="button" class="btn-equals px-4 py-2 rounded-xl text-xs font-bold text-white shadow-md btn-press flex items-center space-x-1">
+            <i class="fas fa-play text-[10px]"></i>
+            <span>Graficar</span>
+          </button>
+        </div>
+
+        <div class="flex items-center space-x-1 overflow-x-auto py-1.5 mt-1 scrollbar-none">
+          <span class="text-[10px] font-semibold text-slate-400 mr-1 shrink-0">Insertar:</span>
+          <button type="button" class="math-insert ui-key px-2.5 py-1 text-xs font-bold rounded-xl bg-white/80 dark:bg-slate-800/90 border border-slate-200/60 dark:border-slate-700/60 shadow-btn-light dark:shadow-btn-dark btn-press shrink-0" data-insert="x">x</button>
+          <button type="button" class="math-insert ui-key px-2.5 py-1 text-xs font-bold rounded-xl bg-white/80 dark:bg-slate-800/90 border border-slate-200/60 dark:border-slate-700/60 shadow-btn-light dark:shadow-btn-dark btn-press shrink-0" data-insert="^2">x²</button>
+          <button type="button" class="math-insert ui-key px-2.5 py-1 text-xs font-bold rounded-xl bg-white/80 dark:bg-slate-800/90 border border-slate-200/60 dark:border-slate-700/60 shadow-btn-light dark:shadow-btn-dark btn-press shrink-0" data-insert="^">^</button>
+          <button type="button" class="math-insert ui-key px-2.5 py-1 text-xs font-bold rounded-xl bg-white/80 dark:bg-slate-800/90 border border-slate-200/60 dark:border-slate-700/60 shadow-btn-light dark:shadow-btn-dark btn-press shrink-0" data-insert="sin(">sin</button>
+          <button type="button" class="math-insert ui-key px-2.5 py-1 text-xs font-bold rounded-xl bg-white/80 dark:bg-slate-800/90 border border-slate-200/60 dark:border-slate-700/60 shadow-btn-light dark:shadow-btn-dark btn-press shrink-0" data-insert="cos(">cos</button>
+          <button type="button" class="math-insert ui-key px-2.5 py-1 text-xs font-bold rounded-xl bg-white/80 dark:bg-slate-800/90 border border-slate-200/60 dark:border-slate-700/60 shadow-btn-light dark:shadow-btn-dark btn-press shrink-0" data-insert="tan(">tan</button>
+          <button type="button" class="math-insert ui-key px-2.5 py-1 text-xs font-bold rounded-xl bg-white/80 dark:bg-slate-800/90 border border-slate-200/60 dark:border-slate-700/60 shadow-btn-light dark:shadow-btn-dark btn-press shrink-0" data-insert="sqrt(">√</button>
+          <button type="button" class="math-insert ui-key px-2.5 py-1 text-xs font-bold rounded-xl bg-white/80 dark:bg-slate-800/90 border border-slate-200/60 dark:border-slate-700/60 shadow-btn-light dark:shadow-btn-dark btn-press shrink-0" data-insert="abs(">|x|</button>
+          <button type="button" class="math-insert ui-key px-2.5 py-1 text-xs font-bold rounded-xl bg-white/80 dark:bg-slate-800/90 border border-slate-200/60 dark:border-slate-700/60 shadow-btn-light dark:shadow-btn-dark btn-press shrink-0" data-insert="pi">π</button>
+          <button type="button" class="math-insert ui-key px-2.5 py-1 text-xs font-bold rounded-xl bg-white/80 dark:bg-slate-800/90 border border-slate-200/60 dark:border-slate-700/60 shadow-btn-light dark:shadow-btn-dark btn-press shrink-0" data-insert="(">(</button>
+          <button type="button" class="math-insert ui-key px-2.5 py-1 text-xs font-bold rounded-xl bg-white/80 dark:bg-slate-800/90 border border-slate-200/60 dark:border-slate-700/60 shadow-btn-light dark:shadow-btn-dark btn-press shrink-0" data-insert=")">)</button>
+        </div>
+      </div>
+
+      <div id="canvasWrapper" class="relative bg-slate-950 border border-slate-300/60 dark:border-slate-800 rounded-2xl overflow-hidden shadow-inner mb-3 flex flex-col">
+        <div id="coordBadge" class="hidden absolute top-2.5 left-2.5 z-10 bg-slate-900/85 text-slate-100 border border-slate-700/80 text-[11px] px-2.5 py-1 rounded-lg backdrop-blur-md shadow-lg pointer-events-none">
+          x: <span id="coordX" class="font-bold text-indigo-400">0.00</span>, y: <span id="coordY" class="font-bold text-emerald-400">0.00</span>
+        </div>
+
+        <div class="absolute top-2.5 right-2.5 z-10 flex flex-col space-y-1 bg-slate-900/75 backdrop-blur-md p-1 rounded-xl border border-slate-700/60">
+          <button id="zoomInBtn" type="button" class="w-7 h-7 rounded-lg text-slate-200 hover:bg-slate-700/80 flex items-center justify-center btn-press">
+            <i class="fas fa-plus text-[11px]"></i>
+          </button>
+          <button id="zoomOutBtn" type="button" class="w-7 h-7 rounded-lg text-slate-200 hover:bg-slate-700/80 flex items-center justify-center btn-press">
+            <i class="fas fa-minus text-[11px]"></i>
+          </button>
+          <button id="resetViewBtn" type="button" class="w-7 h-7 rounded-lg text-slate-200 hover:bg-slate-700/80 flex items-center justify-center btn-press">
+            <i class="fas fa-crosshairs text-[11px]"></i>
+          </button>
+        </div>
+
+        <canvas id="graphCanvas" style="height: 280px;" class="w-full block cursor-crosshair"></canvas>
+
+        <div id="graphError" class="hidden absolute bottom-7 left-3 right-3 bg-red-500/90 text-white text-xs font-medium px-3 py-1.5 rounded-xl text-center backdrop-blur-md shadow-lg">
+          <i class="fas fa-exclamation-triangle mr-1"></i> Revisa la sintaxis de la función
+        </div>
+
+        <div id="resizeHandle" class="resize-handle w-full h-4 bg-slate-900/95 hover:bg-slate-800 border-t border-slate-800 flex items-center justify-center transition-colors">
+          <div class="w-10 h-1 rounded-full bg-slate-600"></div>
+        </div>
+      </div>
+
+      <div class="p-2.5 bg-slate-100/70 dark:bg-slate-800/60 rounded-2xl border border-slate-200/50 dark:border-slate-700/50">
+        <div class="flex items-center justify-between mb-1.5">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Ejemplos rápidos</span>
+          <span class="text-[10px] text-slate-400"><i class="fas fa-hand-pointer mr-1"></i>Arrastra para mover</span>
+        </div>
+        <div class="grid grid-cols-4 gap-1.5 text-[11px]">
+          <button type="button" class="quick-func ui-key py-1.5 px-2 rounded-xl bg-white/85 dark:bg-slate-700/90 border border-slate-200/60 dark:border-slate-600/50 font-bold shadow-btn-light dark:shadow-btn-dark btn-press truncate" data-expr="sin(x) * 2">Onda</button>
+          <button type="button" class="quick-func ui-key py-1.5 px-2 rounded-xl bg-white/85 dark:bg-slate-700/90 border border-slate-200/60 dark:border-slate-600/50 font-bold shadow-btn-light dark:shadow-btn-dark btn-press truncate" data-expr="x^2 - 4">Parábola</button>
+          <button type="button" class="quick-func ui-key py-1.5 px-2 rounded-xl bg-white/85 dark:bg-slate-700/90 border border-slate-200/60 dark:border-slate-600/50 font-bold shadow-btn-light dark:shadow-btn-dark btn-press truncate" data-expr="x^3 - 3*x">Cúbica</button>
+          <button type="button" class="quick-func ui-key py-1.5 px-2 rounded-xl bg-white/85 dark:bg-slate-700/90 border border-slate-200/60 dark:border-slate-600/50 font-bold shadow-btn-light dark:shadow-btn-dark btn-press truncate" data-expr="cos(x)*x">Espiral</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Historial Overlay -->
+    <div id="historyOverlay" class="absolute inset-0 bg-white/95 dark:bg-slate-900/95 glass-panel rounded-3xl p-5 flex flex-col justify-between transition-all duration-300 opacity-0 pointer-events-none translate-y-4 z-20">
+      <div>
+        <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-200 dark:border-slate-800">
+          <h3 class="font-bold text-slate-800 dark:text-slate-100 flex items-center">
+            <i class="fas fa-history mr-2 id-history-icon text-indigo-500"></i> Historial
+          </h3>
+          <button id="closeHistoryBtn" type="button" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div id="historyList" class="max-h-[300px] overflow-y-auto space-y-2 pr-1">
+          <div class="text-center text-xs text-slate-400 py-8">No hay operaciones recientes</div>
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center">
+        <button id="clearHistoryBtn" type="button" class="text-xs text-red-500 hover:text-red-600 font-medium flex items-center">
+          <i class="fas fa-trash-alt mr-1"></i> Borrar Historial
+        </button>
+        <span class="text-[10px] text-slate-400">Haz clic en una entrada para reutilizarla</span>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // 1. VARIABLES DE ESTADO GLOBALES
+    const defaultSettings = {
+      bgKey: 'aurora',
+      themeKey: 'indigo',
+      btnShape: 'rounded-2xl',
+      fontType: 'sans',
+      glassOpacity: 75,
+      displayFontSize: 36,
+      btnFontSize: 16,
+      useCustomColors: false,
+      autoContrast: true,
+      gradientDir: '135deg',
+      customColors: {
+        bg: '#0f172a',
+        bg2: '#1e1b4b',
+        panel: '#0f172a',
+        display: '#020617',
+        num: '#1e293b',
+        op: '#312e81',
+        func: '#334155',
+        equals: '#6366f1',
+        stroke: '#6366f1'
+      },
+      volume: 0.7,
+      pitch: 1.0,
+      soundPack: 'crystal',
+      echo: false,
+      haptic: true,
+      darkMode: true
+    };
+
+    let settings = JSON.parse(JSON.stringify(defaultSettings));
+    try {
+      const saved = localStorage.getItem('calc_pro_settings_v3');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        settings = {
+          ...defaultSettings,
+          ...parsed,
+          customColors: { ...defaultSettings.customColors, ...(parsed.customColors || {}) }
+        };
+      }
+    } catch (e) {}
+
+    let strokeColor = '#6366f1';
+    let previousVolume = settings.volume || 0.7;
+    let isFullscreenMode = false;
+    let isWideMode = false;
+    let activeColorTarget = 'equals';
+
+    // Estado de la Calculadora
+    let currentValue = '0';
+    let previousValue = null;
+    let currentOperation = null;
+    let shouldResetDisplay = false;
+    let history = [];
+    let memoryValue = 0;
+
+    // Estado de la Graficadora
+    let scale = 35;
+    let offsetX = 0;
+    let offsetY = 0;
+    let isDragging = false;
+    let startX = 0, startY = 0;
+    let hoverMouseX = null;
+    let compiledFunc = null;
+    let isResizingHeight = false;
+    let resizeStartY = 0;
+    let resizeStartHeight = 0;
+
+    // AudioContext inicializado de forma segura
+    let audioCtx = null;
+    function getAudioCtx() {
+      if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+          audioCtx = new AudioContextClass();
+        }
+      }
+      return audioCtx;
+    }
+
+    function saveSettings() {
+      try {
+        localStorage.setItem('calc_pro_settings_v3', JSON.stringify(settings));
+      } catch (e) {}
+    }
+
+    // 2. UTILIDADES DE COLOR Y AUTO-CONTRASTE INTELIGENTE
+    function normalizeHex(hex) {
+      let clean = (hex || '').replace(/[^0-9A-Fa-f]/g, '');
+      if (clean.length === 3) {
+        clean = clean.split('').map(c => c + c).join('');
+      }
+      if (clean.length !== 6) return null;
+      return '#' + clean.toLowerCase();
+    }
+
+    function hexToRgb(hex) {
+      const norm = normalizeHex(hex) || '#0f172a';
+      const clean = norm.replace('#', '');
+      return {
+        r: parseInt(clean.substring(0, 2), 16),
+        g: parseInt(clean.substring(2, 4), 16),
+        b: parseInt(clean.substring(4, 6), 16)
+      };
+    }
+
+    function hexToRgba(hex, alpha) {
+      const { r, g, b } = hexToRgb(hex);
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    // Calcula luminosidad relativa WCAG para determinar texto claro u oscuro automáticamente
+    function getContrastTextColor(hex) {
+      if (!settings.autoContrast) return '#ffffff';
+      const { r, g, b } = hexToRgb(hex);
+      const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+      return luminance > 0.58 ? '#0f172a' : '#f8fafc';
+    }
+
+    function getSubtleTextColor(hex) {
+      const { r, g, b } = hexToRgb(hex);
+      const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+      return luminance > 0.58 ? '#475569' : '#94a3b8';
+    }
+
+    function hexToHsv(hex) {
+      let { r, g, b } = hexToRgb(hex);
+      r /= 255; g /= 255; b /= 255;
+      const max = Math.max(r, g, b), min = Math.min(r, g, b);
+      let h = 0, s = 0, v = max;
+      const d = max - min;
+      s = max === 0 ? 0 : d / max;
+      if (max !== min) {
+        switch (max) {
+          case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+          case g: h = (b - r) / d + 2; break;
+          case b: h = (r - g) / d + 4; break;
+        }
+        h /= 6;
+      }
+      return { h: Math.round(h * 360), s: Math.round(s * 100), v: Math.round(v * 100) };
+    }
+
+    function hsvToHex(h, s, v) {
+      h = ((h % 360) + 360) % 360;
+      s = Math.max(0, Math.min(100, s)) / 100;
+      v = Math.max(0, Math.min(100, v)) / 100;
+      const c = v * s;
+      const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+      const m = v - c;
+      let r = 0, g = 0, b = 0;
+      if (h < 60) { r = c; g = x; b = 0; }
+      else if (h < 120) { r = x; g = c; b = 0; }
+      else if (h < 180) { r = 0; g = c; b = x; }
+      else if (h < 240) { r = 0; g = x; b = c; }
+      else if (h < 300) { r = x; g = 0; b = c; }
+      else { r = c; g = 0; b = x; }
+      const toHex = n => Math.round((n + m) * 255).toString(16).padStart(2, '0');
+      return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+    }
+
+    // Paletas maestras predefinidas de 1 clic
+    const masterPresets = {
+      neon: {
+        darkMode: true,
+        colors: { bg: '#090014', bg2: '#1a0033', panel: '#120326', display: '#070112', num: '#1f083d', op: '#4c1d95', func: '#2e1065', equals: '#e879f9', stroke: '#22d3ee' }
+      },
+      obsidian: {
+        darkMode: true,
+        colors: { bg: '#09090b', bg2: '#18181b', panel: '#121215', display: '#050507', num: '#1f1f23', op: '#27272a', func: '#3f3f46', equals: '#f59e0b', stroke: '#fbbf24' }
+      },
+      pastel: {
+        darkMode: false,
+        colors: { bg: '#fdf2f8', bg2: '#eef2ff', panel: '#ffffff', display: '#fce7f3', num: '#fff1f2', op: '#e0e7ff', func: '#f3e8ff', equals: '#f472b6', stroke: '#a855f7' }
+      },
+      emerald: {
+        darkMode: true,
+        colors: { bg: '#022c22', bg2: '#064e3b', panel: '#042f2e', display: '#011c16', num: '#065f46', op: '#047857', func: '#115e59', equals: '#10b981', stroke: '#34d399' }
+      },
+      solar: {
+        darkMode: false,
+        colors: { bg: '#fff7ed', bg2: '#fef3c7', panel: '#fffbeb', display: '#ffedd5', num: '#ffffff', op: '#fed7aa', func: '#fde68a', equals: '#f97316', stroke: '#ea580c' }
+      },
+      cyberpunk: {
+        darkMode: true,
+        colors: { bg: '#050816', bg2: '#1e1b4b', panel: '#0f172a', display: '#020617', num: '#1e293b', op: '#0e7490', func: '#312e81', equals: '#06b6d4', stroke: '#f43f5e' }
+      },
+      arctic: {
+        darkMode: false,
+        colors: { bg: '#e0f2fe', bg2: '#f0f9ff', panel: '#f8fafc', display: '#e2e8f0', num: '#ffffff', op: '#bae6fd', func: '#cbd5e1', equals: '#0284c7', stroke: '#0369a1' }
+      },
+      crimson: {
+        darkMode: true,
+        colors: { bg: '#190409', bg2: '#3b0712', panel: '#22060d', display: '#120206', num: '#380a16', op: '#7f1d1d', func: '#4c0519', equals: '#e11d48', stroke: '#fb7185' }
+      }
+    };
+
+    const targetLabels = {
+      bg: 'Fondo 1',
+      bg2: 'Fondo 2',
+      panel: 'Panel Cristal',
+      display: 'Pantalla',
+      num: 'Números',
+      op: 'Operadores',
+      func: 'Funciones',
+      equals: 'Botón Igual',
+      stroke: 'Gráfica'
+    };
+
+    // 3. REFERENCIAS AL DOM
+    const mainDisplay = document.getElementById('mainDisplay');
+    const expressionDisplay = document.getElementById('expressionDisplay');
+    const memoryIndicator = document.getElementById('memoryIndicator');
+    const calcDisplayBox = document.getElementById('calcDisplayBox');
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    const scientificToggleBtn = document.getElementById('scientificToggleBtn');
+    const scientificDrawer = document.getElementById('scientificDrawer');
+    const sciIcon = document.getElementById('sciIcon');
+    const historyToggleBtn = document.getElementById('historyToggleBtn');
+    const historyOverlay = document.getElementById('historyOverlay');
+    const closeHistoryBtn = document.getElementById('closeHistoryBtn');
+    const historyList = document.getElementById('historyList');
+    const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+
+    const colorMenuBtn = document.getElementById('colorMenuBtn');
+    const colorPalette = document.getElementById('colorPalette');
+    const soundMenuBtn = document.getElementById('soundMenuBtn');
+    const soundPanel = document.getElementById('soundPanel');
+    const volumeSlider = document.getElementById('volumeSlider');
+    const volumeValueLabel = document.getElementById('volumeValueLabel');
+    const pitchSlider = document.getElementById('pitchSlider');
+    const pitchValueLabel = document.getElementById('pitchValueLabel');
+    const soundIcon = document.getElementById('soundIcon');
+    const muteQuickBtn = document.getElementById('muteQuickBtn');
+
+    const mainContainer = document.getElementById('mainContainer');
+    const fullscreenToggleBtn = document.getElementById('fullscreenToggleBtn');
+    const fullscreenIcon = document.getElementById('fullscreenIcon');
+    const tabCalcBtn = document.getElementById('tabCalcBtn');
+    const tabGraphBtn = document.getElementById('tabGraphBtn');
+    const calculatorTab = document.getElementById('calculatorTab');
+    const grapherTab = document.getElementById('grapherTab');
+
+    const canvas = document.getElementById('graphCanvas');
+    const ctx = canvas.getContext('2d');
+    const functionInput = document.getElementById('functionInput');
+    const clearFuncBtn = document.getElementById('clearFuncBtn');
+    const plotBtn = document.getElementById('plotBtn');
+    const graphError = document.getElementById('graphError');
+    const zoomInBtn = document.getElementById('zoomInBtn');
+    const zoomOutBtn = document.getElementById('zoomOutBtn');
+    const resetViewBtn = document.getElementById('resetViewBtn');
+    const coordBadge = document.getElementById('coordBadge');
+    const coordXEl = document.getElementById('coordX');
+    const coordYEl = document.getElementById('coordY');
+    const resizeHandle = document.getElementById('resizeHandle');
+    const expandWidthBtn = document.getElementById('expandWidthBtn');
+    const expandWidthIcon = document.getElementById('expandWidthIcon');
+
+    // Referencias del Estudio de Color HSV
+    const hsvSatValBox = document.getElementById('hsvSatValBox');
+    const hsvCursor = document.getElementById('hsvCursor');
+    const hsvHueStrip = document.getElementById('hsvHueStrip');
+    const hsvHueCursor = document.getElementById('hsvHueCursor');
+    const hexCodeInput = document.getElementById('hexCodeInput');
+    const nativeColorSync = document.getElementById('nativeColorSync');
+    const copyHexBtn = document.getElementById('copyHexBtn');
+    const copyHexIcon = document.getElementById('copyHexIcon');
+
+    // 4. FONDOS Y TEMAS PREDEFINIDOS
+    const backgroundStyles = {
+      aurora: "from-indigo-100 via-purple-50 to-pink-100 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950",
+      cyberpunk: "from-purple-900 via-slate-950 to-cyan-900 dark:from-black dark:via-purple-950 dark:to-cyan-950",
+      minimal: "from-slate-50 via-slate-100 to-slate-200 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800",
+      midnight: "from-slate-950 via-blue-950 to-slate-900 dark:from-black dark:via-slate-950 dark:to-blue-950",
+      sunset: "from-rose-100 via-orange-50 to-amber-100 dark:from-slate-950 dark:via-rose-950 dark:to-amber-950",
+      forest: "from-emerald-100 via-teal-50 to-green-100 dark:from-slate-950 dark:via-emerald-950 dark:to-slate-900",
+      ocean: "from-sky-100 via-blue-50 to-cyan-100 dark:from-slate-950 dark:via-sky-950 dark:to-blue-950",
+      lavender: "from-violet-100 via-purple-50 to-fuchsia-100 dark:from-slate-950 dark:via-violet-950 dark:to-purple-950"
+    };
+
+    const colorThemes = {
+      indigo: {
+        op: "bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-900/60 border border-indigo-200/50 dark:border-indigo-800/40 font-bold",
+        sci: "bg-purple-100/60 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 hover:bg-purple-200/60 dark:hover:bg-purple-900/40 border border-purple-200/40 dark:border-purple-800/30 font-medium h-10 sm:h-11",
+        mem: "bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 border border-indigo-200/40 font-semibold h-9",
+        equals: "bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700 border-none shadow-md shadow-indigo-500/30 font-bold",
+        icon: "text-indigo-500",
+        pill: "bg-indigo-500 text-white",
+        memInd: "px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-500 dark:text-indigo-400",
+        stroke: '#6366f1'
+      },
+      emerald: {
+        op: "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-900/60 border border-emerald-200/50 dark:border-emerald-800/40 font-bold",
+        sci: "bg-teal-100/60 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 hover:bg-teal-200/60 dark:hover:bg-teal-900/40 border border-teal-200/40 dark:border-teal-800/30 font-medium h-10 sm:h-11",
+        mem: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 border border-emerald-200/40 font-semibold h-9",
+        equals: "bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700 border-none shadow-md shadow-emerald-500/30 font-bold",
+        icon: "text-emerald-500",
+        pill: "bg-emerald-500 text-white",
+        memInd: "px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-500 dark:text-emerald-400",
+        stroke: '#10b981'
+      },
+      rose: {
+        op: "bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 hover:bg-rose-200 dark:hover:bg-rose-900/60 border border-rose-200/50 dark:border-rose-800/40 font-bold",
+        sci: "bg-pink-100/60 dark:bg-pink-950/40 text-pink-700 dark:text-pink-300 hover:bg-pink-200/60 dark:hover:bg-pink-900/40 border border-pink-200/40 dark:border-pink-800/30 font-medium h-10 sm:h-11",
+        mem: "bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/40 border border-rose-200/40 font-semibold h-9",
+        equals: "bg-gradient-to-r from-rose-500 to-pink-600 text-white hover:from-rose-600 hover:to-pink-700 border-none shadow-md shadow-rose-500/30 font-bold",
+        icon: "text-rose-500",
+        pill: "bg-rose-500 text-white",
+        memInd: "px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-500 dark:text-rose-400",
+        stroke: '#f43f5e'
+      },
+      amber: {
+        op: "bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-900/60 border border-amber-200/50 dark:border-amber-800/40 font-bold",
+        sci: "bg-orange-100/60 dark:bg-orange-950/40 text-orange-700 dark:text-orange-300 hover:bg-orange-200/60 dark:hover:bg-orange-900/40 border border-orange-200/40 dark:border-orange-800/30 font-medium h-10 sm:h-11",
+        mem: "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/40 border border-amber-200/40 font-semibold h-9",
+        equals: "bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:from-amber-600 hover:to-orange-700 border-none shadow-md shadow-amber-500/30 font-bold",
+        icon: "text-amber-500",
+        pill: "bg-amber-500 text-white",
+        memInd: "px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-500 dark:text-amber-400",
+        stroke: '#f59e0b'
+      },
+      cyan: {
+        op: "bg-cyan-100 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-400 hover:bg-cyan-200 dark:hover:bg-cyan-900/60 border border-cyan-200/50 dark:border-cyan-800/40 font-bold",
+        sci: "bg-sky-100/60 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 hover:bg-sky-200/60 dark:hover:bg-sky-900/40 border border-sky-200/40 dark:border-sky-800/30 font-medium h-10 sm:h-11",
+        mem: "bg-cyan-50 dark:bg-cyan-950/40 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-100 dark:hover:bg-cyan-900/40 border border-cyan-200/40 font-semibold h-9",
+        equals: "bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:from-cyan-600 hover:to-blue-700 border-none shadow-md shadow-cyan-500/30 font-bold",
+        icon: "text-cyan-500",
+        pill: "bg-cyan-500 text-white",
+        memInd: "px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-500 dark:text-cyan-400",
+        stroke: '#06b6d4'
+      },
+      violet: {
+        op: "bg-violet-100 dark:bg-violet-950/60 text-violet-600 dark:text-violet-400 hover:bg-violet-200 dark:hover:bg-violet-900/60 border border-violet-200/50 dark:border-violet-800/40 font-bold",
+        sci: "bg-purple-100/60 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 hover:bg-purple-200/60 dark:hover:bg-purple-900/40 border border-purple-200/40 dark:border-purple-800/30 font-medium h-10 sm:h-11",
+        mem: "bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 hover:bg-violet-100 dark:hover:bg-violet-900/40 border border-violet-200/40 font-semibold h-9",
+        equals: "bg-gradient-to-r from-violet-500 to-fuchsia-600 text-white hover:from-violet-600 hover:to-fuchsia-700 border-none shadow-md shadow-violet-500/30 font-bold",
+        icon: "text-violet-500",
+        pill: "bg-violet-500 text-white",
+        memInd: "px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-500 dark:text-violet-400",
+        stroke: '#8b5cf6'
+      },
+      fuchsia: {
+        op: "bg-fuchsia-100 dark:bg-fuchsia-950/60 text-fuchsia-600 dark:text-fuchsia-400 hover:bg-fuchsia-200 dark:hover:bg-fuchsia-900/60 border border-fuchsia-200/50 dark:border-fuchsia-800/40 font-bold",
+        sci: "bg-pink-100/60 dark:bg-pink-950/40 text-pink-700 dark:text-pink-300 hover:bg-pink-200/60 dark:hover:bg-pink-900/40 border border-pink-200/40 dark:border-pink-800/30 font-medium h-10 sm:h-11",
+        mem: "bg-fuchsia-50 dark:bg-fuchsia-950/40 text-fuchsia-700 dark:text-fuchsia-300 hover:bg-fuchsia-100 dark:hover:bg-fuchsia-900/40 border border-fuchsia-200/40 font-semibold h-9",
+        equals: "bg-gradient-to-r from-fuchsia-500 to-rose-600 text-white hover:from-fuchsia-600 hover:to-rose-700 border-none shadow-md shadow-fuchsia-500/30 font-bold",
+        icon: "text-fuchsia-500",
+        pill: "bg-fuchsia-500 text-white",
+        memInd: "px-1.5 py-0.5 rounded bg-fuchsia-500/20 text-fuchsia-500 dark:text-fuchsia-400",
+        stroke: '#d946ef'
+      },
+      orange: {
+        op: "bg-orange-100 dark:bg-orange-950/60 text-orange-600 dark:text-orange-400 hover:bg-orange-200 dark:hover:bg-orange-900/60 border border-orange-200/50 dark:border-orange-800/40 font-bold",
+        sci: "bg-amber-100/60 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 hover:bg-amber-200/60 dark:hover:bg-amber-900/40 border border-amber-200/40 dark:border-amber-800/30 font-medium h-10 sm:h-11",
+        mem: "bg-orange-50 dark:bg-orange-950/40 text-orange-700 dark:text-orange-300 hover:bg-orange-100 dark:hover:bg-orange-900/40 border border-orange-200/40 font-semibold h-9",
+        equals: "bg-gradient-to-r from-orange-500 to-red-600 text-white hover:from-orange-600 hover:to-red-700 border-none shadow-md shadow-orange-500/30 font-bold",
+        icon: "text-orange-500",
+        pill: "bg-orange-500 text-white",
+        memInd: "px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-500 dark:text-orange-400",
+        stroke: '#f97316'
+      }
+    };
+
+    const numClasses = "bg-white/80 dark:bg-slate-800/80 text-slate-800 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-700/80 border border-slate-200/60 dark:border-slate-700/40";
+    const funcClasses = "bg-slate-200/70 dark:bg-slate-700/60 text-slate-700 dark:text-slate-200 hover:bg-slate-300/70 dark:hover:bg-slate-600/70 border border-slate-300/40 dark:border-slate-600/40";
+
+    function getBaseBtnClasses() {
+      return `calc-key-surface h-12 sm:h-14 ${settings.btnShape} font-semibold flex items-center justify-center transition-all duration-150 shadow-btn-light dark:shadow-btn-dark active:shadow-btn-active`;
+    }
+
+    function updateSoundPackUI() {
+      const theme = colorThemes[settings.themeKey] || colorThemes.indigo;
+      document.querySelectorAll('.sound-pack-opt').forEach(btn => {
+        const isSelected = btn.getAttribute('data-pack') === settings.soundPack;
+        if (isSelected) {
+          if (settings.useCustomColors) {
+            btn.className = `sound-pack-opt ui-key py-2 px-1.5 ${settings.btnShape} text-[11px] font-bold shadow-btn-light dark:shadow-btn-dark btn-press truncate`;
+            btn.style.backgroundColor = settings.customColors.equals;
+            btn.style.color = getContrastTextColor(settings.customColors.equals);
+          } else {
+            btn.className = `sound-pack-opt ui-key py-2 px-1.5 ${settings.btnShape} text-[11px] font-bold shadow-btn-light dark:shadow-btn-dark btn-press truncate ${theme.pill}`;
+            btn.style.backgroundColor = '';
+            btn.style.color = '';
+          }
+        } else {
+          btn.className = `sound-pack-opt ui-key py-2 px-1.5 ${settings.btnShape} text-[11px] font-bold bg-white/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/50 text-slate-700 dark:text-slate-200 shadow-btn-light dark:shadow-btn-dark btn-press truncate`;
+          btn.style.backgroundColor = '';
+          btn.style.color = '';
+        }
+      });
+    }
+
+    // Sincronización visual del estudio de color HSV
+    function syncColorStudioUI() {
+      const currentHex = settings.customColors[activeColorTarget] || '#6366f1';
+      const hsv = hexToHsv(currentHex);
+
+      // Actualizar swatches de cada elemento
+      Object.keys(targetLabels).forEach(key => {
+        const swatch = document.getElementById(`swatch-${key}`);
+        if (swatch) swatch.style.backgroundColor = settings.customColors[key];
+      });
+
+      // Resaltar el botón del elemento seleccionado
+      document.querySelectorAll('.color-target-btn').forEach(btn => {
+        const isTarget = btn.getAttribute('data-target') === activeColorTarget;
+        if (isTarget) {
+          btn.className = `color-target-btn ui-key px-2 py-1.5 ${settings.btnShape} text-[10px] font-bold flex items-center justify-between border-2 border-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-btn-light dark:shadow-btn-dark btn-press`;
+        } else {
+          btn.className = `color-target-btn ui-key px-2 py-1.5 ${settings.btnShape} text-[10px] font-bold flex items-center justify-between border border-slate-200/60 dark:border-slate-700/50 bg-white/70 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 shadow-btn-light dark:shadow-btn-dark btn-press`;
+        }
+      });
+
+      document.getElementById('activeTargetName').textContent = targetLabels[activeColorTarget] || activeColorTarget;
+
+      // Posicionar cursores en el espectro HSV
+      hsvSatValBox.style.setProperty('--hsv-hue', hsv.h);
+      hsvCursor.style.left = `${hsv.s}%`;
+      hsvCursor.style.top = `${100 - hsv.v}%`;
+      hsvCursor.style.backgroundColor = currentHex;
+
+      hsvHueCursor.style.left = `${(hsv.h / 360) * 100}%`;
+
+      // Sincronizar input HEX y color nativo
+      if (document.activeElement !== hexCodeInput) {
+        hexCodeInput.value = currentHex.replace('#', '').toUpperCase();
+      }
+      nativeColorSync.value = currentHex;
+
+      // Botón de Auto-Contraste
+      const autoLabel = document.getElementById('autoContrastLabel');
+      const autoBtn = document.getElementById('autoContrastToggleBtn');
+      autoLabel.textContent = settings.autoContrast ? 'Auto-Contraste: ON' : 'Auto-Contraste: OFF';
+      autoBtn.classList.toggle('opacity-60', !settings.autoContrast);
+
+      // Dirección de degradado
+      document.querySelectorAll('.grad-dir-btn').forEach(btn => {
+        const active = btn.getAttribute('data-dir') === settings.gradientDir;
+        btn.className = active
+          ? "grad-dir-btn px-2 py-0.5 rounded-lg font-bold bg-indigo-500 text-white shadow-sm"
+          : "grad-dir-btn px-2 py-0.5 rounded-lg font-bold bg-slate-200/80 dark:bg-slate-700 text-slate-600 dark:text-slate-300";
+      });
+    }
+
+    function formatNumber(numStr) {
+      if (numStr === 'Error') return 'Error';
+      if (numStr.endsWith('.')) return numStr;
+      const parts = numStr.split('.');
+      const integerPart = parseFloat(parts[0]).toLocaleString('es-ES');
+      if (isNaN(parseFloat(parts[0]))) return '0';
+      return parts.length > 1 ? `${integerPart}.${parts[1]}` : integerPart;
+    }
+
+    function updateDisplay() {
+      mainDisplay.textContent = formatNumber(currentValue);
+      const baseSize = settings.displayFontSize || 36;
+      const effectiveSize = currentValue.length > 10 ? Math.max(20, Math.round(baseSize * 0.68)) : baseSize;
+      mainDisplay.style.fontSize = `${effectiveSize}px`;
+      memoryIndicator.classList.toggle('opacity-100', memoryValue !== 0);
+      memoryIndicator.classList.toggle('opacity-0', memoryValue === 0);
+    }
+
+    function applyAllAppearance() {
+      const appBg = document.getElementById('appBg');
+      const theme = colorThemes[settings.themeKey] || colorThemes.indigo;
+      const base = getBaseBtnClasses();
+      const alpha = settings.glassOpacity / 100;
+
+      // 1. Modo Claro / Oscuro
+      document.documentElement.classList.toggle('dark', settings.darkMode);
+      document.getElementById('themeIcon').className = settings.darkMode ? 'fas fa-sun text-xs text-amber-400' : 'fas fa-moon text-xs';
+
+      // 2. Tipografía Global mediante variable CSS --app-font
+      const fontMap = {
+        sans: "'Inter', system-ui, -apple-system, sans-serif",
+        mono: "'JetBrains Mono', monospace",
+        serif: "'Playfair Display', Georgia, serif",
+        poppins: "'Poppins', sans-serif"
+      };
+      document.documentElement.style.setProperty('--app-font', fontMap[settings.fontType] || fontMap.sans);
+
+      // 3. Color de acento CSS para sliders
+      const activeAccent = settings.useCustomColors ? settings.customColors.equals : theme.stroke;
+      document.documentElement.style.setProperty('--accent-color', activeAccent);
+
+      // 4. Fondo y Paneles
+      if (settings.useCustomColors) {
+        const c = settings.customColors;
+        appBg.className = "min-h-screen text-slate-800 dark:text-slate-100 flex items-center justify-center p-2 sm:p-4 transition-all duration-500";
+        if (settings.gradientDir === 'radial') {
+          appBg.style.background = `radial-gradient(circle at center, ${c.bg2}, ${c.bg})`;
+        } else {
+          appBg.style.background = `linear-gradient(${settings.gradientDir}, ${c.bg}, ${c.bg2})`;
+        }
+
+        mainContainer.style.backgroundColor = hexToRgba(c.panel, alpha);
+        soundPanel.style.backgroundColor = hexToRgba(c.panel, Math.min(0.95, alpha + 0.1));
+        colorPalette.style.backgroundColor = hexToRgba(c.panel, Math.min(0.95, alpha + 0.1));
+
+        // Display de la calculadora
+        calcDisplayBox.style.backgroundColor = hexToRgba(c.display, 0.88);
+        mainDisplay.style.color = getContrastTextColor(c.display);
+        expressionDisplay.style.color = getSubtleTextColor(c.display);
+
+        strokeColor = c.stroke;
+        document.getElementById('customColorBadge').classList.remove('hidden');
+      } else {
+        const bgClass = backgroundStyles[settings.bgKey] || backgroundStyles.aurora;
+        appBg.style.background = '';
+        appBg.className = `min-h-screen bg-gradient-to-br ${bgClass} text-slate-800 dark:text-slate-100 flex items-center justify-center p-2 sm:p-4 transition-all duration-500`;
+        const panelRgba = settings.darkMode ? `rgba(15, 23, 42, ${alpha})` : `rgba(255, 255, 255, ${alpha})`;
+        const subPanelRgba = settings.darkMode ? `rgba(15, 23, 42, ${Math.min(0.92, alpha + 0.08)})` : `rgba(255, 255, 255, ${Math.min(0.92, alpha + 0.08)})`;
+        mainContainer.style.backgroundColor = panelRgba;
+        soundPanel.style.backgroundColor = subPanelRgba;
+        colorPalette.style.backgroundColor = subPanelRgba;
+
+        calcDisplayBox.style.backgroundColor = '';
+        mainDisplay.style.color = '';
+        expressionDisplay.style.color = '';
+
+        strokeColor = theme.stroke;
+        document.getElementById('customColorBadge').classList.add('hidden');
+      }
+
+      // 5. Botones de la Calculadora (con auto-contraste inteligente)
+      document.querySelectorAll('.btn-num').forEach(b => {
+        b.className = `btn-calc btn-num ${base} ${settings.useCustomColors ? 'border border-white/15' : numClasses}`;
+        b.style.backgroundColor = settings.useCustomColors ? settings.customColors.num : '';
+        b.style.color = settings.useCustomColors ? getContrastTextColor(settings.customColors.num) : '';
+        b.style.fontSize = `${settings.btnFontSize}px`;
+      });
+
+      document.querySelectorAll('.btn-func').forEach(b => {
+        b.className = `btn-calc btn-func ${base} ${settings.useCustomColors ? 'border border-white/15' : funcClasses}`;
+        b.style.backgroundColor = settings.useCustomColors ? settings.customColors.func : '';
+        b.style.color = settings.useCustomColors ? getContrastTextColor(settings.customColors.func) : '';
+        b.style.fontSize = `${settings.btnFontSize}px`;
+      });
+
+      document.querySelectorAll('.btn-op').forEach(b => {
+        b.className = `btn-calc btn-op ${base} ${settings.useCustomColors ? 'font-bold border border-white/15' : theme.op}`;
+        b.style.backgroundColor = settings.useCustomColors ? settings.customColors.op : '';
+        b.style.color = settings.useCustomColors ? getContrastTextColor(settings.customColors.op) : '';
+        b.style.fontSize = `${settings.btnFontSize}px`;
+      });
+
+      document.querySelectorAll('.btn-sci').forEach(b => {
+        b.className = `btn-calc btn-sci ${base} ${settings.useCustomColors ? 'border border-white/15' : theme.sci}`;
+        b.style.backgroundColor = settings.useCustomColors ? settings.customColors.func : '';
+        b.style.color = settings.useCustomColors ? getContrastTextColor(settings.customColors.func) : '';
+        b.style.fontSize = `${Math.max(11, settings.btnFontSize - 2)}px`;
+      });
+
+      document.querySelectorAll('.btn-mem').forEach(b => {
+        b.className = `btn-calc btn-mem ${base} ${settings.useCustomColors ? 'border border-white/15' : theme.mem}`;
+        b.style.backgroundColor = settings.useCustomColors ? settings.customColors.op : '';
+        b.style.color = settings.useCustomColors ? getContrastTextColor(settings.customColors.op) : '';
+        b.style.fontSize = `${Math.max(10, settings.btnFontSize - 3)}px`;
+      });
+
+      document.querySelectorAll('.btn-equals').forEach(b => {
+        if (b.id === 'plotBtn') {
+          b.className = `btn-equals px-4 py-2 ${settings.btnShape} text-xs font-bold shadow-btn-light dark:shadow-btn-dark btn-press flex items-center space-x-1 ${settings.useCustomColors ? '' : theme.equals}`;
+          b.style.backgroundColor = settings.useCustomColors ? settings.customColors.equals : '';
+          b.style.color = settings.useCustomColors ? getContrastTextColor(settings.customColors.equals) : '#ffffff';
+        } else {
+          b.className = `btn-calc btn-equals ${base} ${settings.useCustomColors ? 'font-bold shadow-md' : theme.equals}`;
+          b.style.backgroundColor = settings.useCustomColors ? settings.customColors.equals : '';
+          b.style.color = settings.useCustomColors ? getContrastTextColor(settings.customColors.equals) : '#ffffff';
+          b.style.fontSize = `${settings.btnFontSize + 3}px`;
+        }
+      });
+
+      // Sincronizar la forma de las teclas en los botones de UI de los paneles
+      document.querySelectorAll('.ui-key').forEach(el => {
+        el.classList.remove('rounded-md', 'rounded-xl', 'rounded-2xl', 'rounded-full');
+        el.classList.add(settings.btnShape);
+      });
+
+      // Iconos de acento
+      const historyIcon = document.querySelector('.id-history-icon');
+      if (historyIcon) historyIcon.className = `fas fa-history mr-2 id-history-icon ${theme.icon}`;
+      const graphIcon = document.querySelector('.id-graph-icon');
+      if (graphIcon) graphIcon.className = `fas fa-wave-square mr-1.5 id-graph-icon ${theme.icon}`;
+      const soundAccent = document.querySelector('.id-sound-accent');
+      if (soundAccent) soundAccent.className = `fas fa-music mr-1.5 id-sound-accent ${theme.icon}`;
+
+      if (memoryIndicator) {
+        memoryIndicator.className = `text-xs font-bold transition-opacity ${theme.memInd} ${memoryValue !== 0 ? 'opacity-100' : 'opacity-0'}`;
+      }
+
+      document.querySelectorAll('.color-opt').forEach(btn => {
+        const active = !settings.useCustomColors && btn.getAttribute('data-theme') === settings.themeKey;
+        btn.classList.toggle('ring-2', active);
+        btn.classList.toggle('ring-white', active);
+        btn.classList.toggle('scale-110', active);
+      });
+
+      document.querySelectorAll('.shape-opt').forEach(btn => {
+        const active = btn.getAttribute('data-shape') === settings.btnShape;
+        btn.className = active
+          ? "shape-opt py-1.5 text-[11px] font-bold rounded-xl bg-white dark:bg-slate-700 shadow-btn-light dark:shadow-btn-dark text-slate-800 dark:text-white btn-press"
+          : "shape-opt py-1.5 text-[11px] font-bold rounded-xl text-slate-500 btn-press";
+      });
+
+      document.querySelectorAll('.font-opt').forEach(btn => {
+        const fType = btn.getAttribute('data-font');
+        const active = fType === settings.fontType;
+        btn.className = active
+          ? `font-opt font-preview-${fType} py-1.5 text-[11px] font-bold rounded-xl bg-white dark:bg-slate-700 shadow-btn-light dark:shadow-btn-dark text-slate-800 dark:text-white btn-press flex flex-col items-center leading-tight`
+          : `font-opt font-preview-${fType} py-1.5 text-[11px] font-bold rounded-xl text-slate-500 btn-press flex flex-col items-center leading-tight`;
+      });
+
+      document.getElementById('glassOpacitySlider').value = settings.glassOpacity;
+      document.getElementById('glassOpacityVal').textContent = `${settings.glassOpacity}%`;
+      document.getElementById('displaySizeSlider').value = settings.displayFontSize;
+      document.getElementById('dispSizeVal').textContent = `${settings.displayFontSize}px`;
+      document.getElementById('btnSizeSlider').value = settings.btnFontSize;
+      document.getElementById('btnSizeVal').textContent = `${settings.btnFontSize}px`;
+
+      syncColorStudioUI();
+      updateSoundPackUI();
+      updateDisplay();
+      if (!grapherTab.classList.contains('hidden')) {
+        drawGraph();
+      }
+      saveSettings();
+    }
+
+    // 5. MOTOR DE AUDIO
+    const numNotes = {
+      '0': 523.25, '1': 587.33, '2': 659.25, '3': 783.99, '4': 880.00,
+      '5': 1046.50, '6': 1174.66, '7': 1318.51, '8': 1567.98, '9': 1760.00, '.': 987.77
+    };
+
+    function playToneRaw(freq, type, duration, gainPeak, delay = 0, slideTo = null) {
+      if (settings.volume <= 0) return;
+      try {
+        const ctxAudio = getAudioCtx();
+        if (!ctxAudio) return;
+        if (ctxAudio.state === 'suspended') ctxAudio.resume();
+        const now = ctxAudio.currentTime + delay;
+        const osc = ctxAudio.createOscillator();
+        const gain = ctxAudio.createGain();
+
+        const pitchMult = settings.pitch || 1.0;
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq * pitchMult, now);
+        if (slideTo) {
+          osc.frequency.exponentialRampToValueAtTime(slideTo * pitchMult, now + duration);
+        }
+
+        const effectiveGain = gainPeak * settings.volume;
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.linearRampToValueAtTime(effectiveGain, now + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+        osc.connect(gain);
+        gain.connect(ctxAudio.destination);
+        osc.start(now);
+        osc.stop(now + duration + 0.01);
+      } catch (e) {}
+    }
+
+    function playTone(freq, type, duration, gainPeak, delay = 0, slideTo = null) {
+      playToneRaw(freq, type, duration, gainPeak, delay, slideTo);
+      if (settings.echo) {
+        playToneRaw(freq, type, duration * 1.15, gainPeak * 0.35, delay + 0.14, slideTo);
+        playToneRaw(freq, type, duration * 1.25, gainPeak * 0.14, delay + 0.28, slideTo);
+      }
+    }
+
+    function playSound(category, keyVal = '5') {
+      if (settings.volume <= 0) return;
+      const pack = settings.soundPack;
+
+      if (pack === 'crystal') {
+        if (category === 'num') {
+          const base = numNotes[keyVal] || 784;
+          playTone(base, 'sine', 0.14, 0.12);
+          playTone(base * 2, 'sine', 0.09, 0.04);
+        } else if (category === 'op') {
+          playTone(440, 'triangle', 0.16, 0.14, 0, 554.37);
+        } else if (category === 'clear') {
+          playTone(659.25, 'sine', 0.14, 0.12, 0, 329.63);
+        } else if (category === 'equals') {
+          playTone(523.25, 'sine', 0.28, 0.11, 0);
+          playTone(659.25, 'sine', 0.28, 0.10, 0.04);
+          playTone(783.99, 'sine', 0.32, 0.10, 0.08);
+          playTone(1046.50, 'sine', 0.40, 0.09, 0.12);
+        } else {
+          playTone(880, 'sine', 0.08, 0.08);
+        }
+      } else if (pack === 'marimba') {
+        if (category === 'num') {
+          const base = (numNotes[keyVal] || 659) * 0.75;
+          playTone(base, 'sine', 0.18, 0.18);
+          playTone(base * 4, 'sine', 0.04, 0.05);
+        } else if (category === 'op') {
+          playTone(392, 'sine', 0.18, 0.18);
+          playTone(587.33, 'sine', 0.12, 0.07, 0.02);
+        } else if (category === 'clear') {
+          playTone(440, 'sine', 0.12, 0.15, 0);
+          playTone(329.63, 'sine', 0.16, 0.15, 0.05);
+        } else if (category === 'equals') {
+          playTone(523.25, 'sine', 0.22, 0.16, 0);
+          playTone(783.99, 'sine', 0.25, 0.16, 0.06);
+          playTone(1046.50, 'sine', 0.35, 0.16, 0.12);
+        } else {
+          playTone(659.25, 'sine', 0.1, 0.12);
+        }
+      } else if (pack === 'piano') {
+        if (category === 'num') {
+          const base = (numNotes[keyVal] || 523.25) * 0.5;
+          playTone(base, 'triangle', 0.32, 0.16);
+          playTone(base * 2, 'sine', 0.24, 0.07);
+          playTone(base * 3, 'sine', 0.15, 0.03);
+        } else if (category === 'op') {
+          playTone(329.63, 'triangle', 0.28, 0.15);
+          playTone(493.88, 'sine', 0.22, 0.06);
+        } else if (category === 'clear') {
+          playTone(293.66, 'triangle', 0.25, 0.15);
+          playTone(220.00, 'triangle', 0.30, 0.14, 0.06);
+        } else if (category === 'equals') {
+          playTone(261.63, 'triangle', 0.45, 0.15, 0);
+          playTone(329.63, 'triangle', 0.45, 0.13, 0.04);
+          playTone(392.00, 'triangle', 0.45, 0.13, 0.08);
+          playTone(523.25, 'triangle', 0.55, 0.14, 0.12);
+        } else {
+          playTone(440, 'triangle', 0.15, 0.10);
+        }
+      } else if (pack === 'mechanical') {
+        if (category === 'equals') {
+          playTone(220, 'triangle', 0.06, 0.22, 0, 90);
+          playTone(1400, 'square', 0.03, 0.05, 0.04);
+        } else if (category === 'clear') {
+          playTone(180, 'triangle', 0.08, 0.22, 0, 70);
+        } else {
+          const pitch = category === 'op' ? 300 : 250;
+          playTone(pitch, 'triangle', 0.045, 0.20, 0, 85);
+          playTone(1800, 'sine', 0.02, 0.05, 0.005);
+        }
+      } else if (pack === 'retro') {
+        if (category === 'num') {
+          playTone(numNotes[keyVal] || 523.25, 'square', 0.07, 0.06);
+        } else if (category === 'op') {
+          playTone(330, 'square', 0.09, 0.06, 0, 440);
+        } else if (category === 'clear') {
+          playTone(440, 'sawtooth', 0.12, 0.07, 0, 140);
+        } else if (category === 'equals') {
+          playTone(523.25, 'square', 0.08, 0.06, 0);
+          playTone(659.25, 'square', 0.08, 0.06, 0.06);
+          playTone(783.99, 'square', 0.08, 0.06, 0.12);
+          playTone(1046.50, 'square', 0.20, 0.07, 0.18);
+        } else {
+          playTone(660, 'square', 0.05, 0.05);
+        }
+      } else if (pack === 'bubble') {
+        if (category === 'num') {
+          const base = (numNotes[keyVal] || 523) * 0.65;
+          playTone(base, 'sine', 0.12, 0.16, 0, base * 1.9);
+        } else if (category === 'op') {
+          playTone(320, 'sine', 0.15, 0.16, 0, 720);
+        } else if (category === 'clear') {
+          playTone(620, 'sine', 0.16, 0.15, 0, 220);
+        } else if (category === 'equals') {
+          playTone(400, 'sine', 0.12, 0.14, 0, 800);
+          playTone(520, 'sine', 0.14, 0.14, 0.07, 1040);
+          playTone(660, 'sine', 0.18, 0.15, 0.14, 1320);
+        } else {
+          playTone(480, 'sine', 0.09, 0.11, 0, 820);
+        }
+      } else if (pack === 'laser') {
+        if (category === 'num') {
+          const base = numNotes[keyVal] || 900;
+          playTone(base * 1.4, 'sawtooth', 0.09, 0.07, 0, base * 0.35);
+        } else if (category === 'op') {
+          playTone(1200, 'sawtooth', 0.12, 0.08, 0, 300);
+        } else if (category === 'clear') {
+          playTone(300, 'sawtooth', 0.16, 0.09, 0, 1400);
+        } else if (category === 'equals') {
+          playTone(1500, 'sawtooth', 0.14, 0.08, 0, 260);
+          playTone(1800, 'square', 0.18, 0.06, 0.07, 360);
+        } else {
+          playTone(1100, 'sawtooth', 0.06, 0.06, 0, 500);
+        }
+      } else if (pack === 'zen') {
+        if (category === 'num') {
+          const base = (numNotes[keyVal] || 523.25) * 0.5;
+          playTone(base, 'sine', 0.55, 0.14);
+          playTone(base * 2.756, 'sine', 0.35, 0.04);
+        } else if (category === 'op') {
+          playTone(392, 'sine', 0.6, 0.14);
+        } else if (category === 'clear') {
+          playTone(261.63, 'sine', 0.65, 0.15);
+        } else if (category === 'equals') {
+          playTone(261.63, 'sine', 0.85, 0.13, 0);
+          playTone(392.00, 'sine', 0.85, 0.11, 0.08);
+          playTone(523.25, 'sine', 0.95, 0.10, 0.16);
+        } else {
+          playTone(523.25, 'sine', 0.35, 0.09);
+        }
+      }
+    }
+
+    function updateSoundControlsUI() {
+      const pct = Math.round(settings.volume * 100);
+      volumeSlider.value = pct;
+      volumeValueLabel.textContent = `${pct}%`;
+
+      pitchSlider.value = Math.round(settings.pitch * 100);
+      pitchValueLabel.textContent = `${settings.pitch.toFixed(1)}x`;
+
+      if (pct === 0) {
+        soundIcon.className = 'fas fa-volume-mute text-xs text-red-400';
+        muteQuickBtn.textContent = 'Activar';
+      } else if (pct < 50) {
+        soundIcon.className = 'fas fa-volume-down text-xs';
+        muteQuickBtn.textContent = 'Silenciar';
+      } else {
+        soundIcon.className = 'fas fa-volume-up text-xs';
+        muteQuickBtn.textContent = 'Silenciar';
+      }
+
+      const echoBadge = document.getElementById('echoStatusBadge');
+      echoBadge.textContent = settings.echo ? 'ON' : 'OFF';
+      echoBadge.className = settings.echo
+        ? 'text-[10px] px-1.5 py-0.5 rounded-lg bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 font-bold'
+        : 'text-[10px] px-1.5 py-0.5 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400';
+
+      const hapticBadge = document.getElementById('hapticStatusBadge');
+      hapticBadge.textContent = settings.haptic ? 'ON' : 'OFF';
+      hapticBadge.className = settings.haptic
+        ? 'text-[10px] px-1.5 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold'
+        : 'text-[10px] px-1.5 py-0.5 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400';
+
+      updateSoundPackUI();
+    }
+
+    // 6. LÓGICA DE CALCULADORA
+    function triggerHaptic() {
+      if (settings.haptic && navigator.vibrate) {
+        try { navigator.vibrate(12); } catch (e) {}
+      }
+    }
+
+    function handleNumber(num) {
+      playSound('num', num);
+      triggerHaptic();
+      if (shouldResetDisplay) {
+        currentValue = num === '.' ? '0.' : num;
+        shouldResetDisplay = false;
+      } else {
+        if (num === '.' && currentValue.includes('.')) return;
+        if (currentValue === '0' && num !== '.') {
+          currentValue = num;
+        } else {
+          if (currentValue.replace('.', '').length >= 12) return;
+          currentValue += num;
+        }
+      }
+      updateDisplay();
+    }
+
+    function getOpSymbol(op) {
+      switch(op) {
+        case 'add': return '+';
+        case 'subtract': return '-';
+        case 'multiply': return '×';
+        case 'divide': return '÷';
+        default: return '';
+      }
+    }
+
+    function handleOperation(op) {
+      playSound('op');
+      triggerHaptic();
+      if (currentOperation && !shouldResetDisplay) calculateResult(true);
+      previousValue = currentValue;
+      currentOperation = op;
+      shouldResetDisplay = true;
+      expressionDisplay.textContent = `${formatNumber(previousValue)} ${getOpSymbol(op)}`;
+    }
+
+    function calculateResult(silent = false) {
+      if (!currentOperation || previousValue === null) return;
+      if (!silent) playSound('equals');
+      const prev = parseFloat(previousValue);
+      const current = parseFloat(currentValue);
+      let result = 0;
+
+      switch(currentOperation) {
+        case 'add': result = prev + current; break;
+        case 'subtract': result = prev - current; break;
+        case 'multiply': result = prev * current; break;
+        case 'divide': result = current === 0 ? 'Error' : prev / current; break;
+      }
+
+      const expr = `${formatNumber(previousValue)} ${getOpSymbol(currentOperation)} ${formatNumber(currentValue)} =`;
+      expressionDisplay.textContent = expr;
+
+      if (result !== 'Error') {
+        result = Math.round(result * 1e10) / 1e10;
+        addToHistory(expr, result.toString());
+        currentValue = result.toString();
+      } else {
+        currentValue = 'Error';
+      }
+
+      currentOperation = null;
+      previousValue = null;
+      shouldResetDisplay = true;
+      updateDisplay();
+    }
+
+    function applyScientific(fn, name) {
+      if (currentValue === 'Error') return;
+      playSound('equals');
+      const val = parseFloat(currentValue);
+      try {
+        const res = Math.round(fn(val) * 1e10) / 1e10;
+        if (isNaN(res) || !isFinite(res)) throw new Error('Math error');
+        const expr = `${name}(${formatNumber(currentValue)}) =`;
+        expressionDisplay.textContent = expr;
+        addToHistory(expr, res.toString());
+        currentValue = res.toString();
+        shouldResetDisplay = true;
+        updateDisplay();
+      } catch(e) {
+        currentValue = 'Error';
+        updateDisplay();
+      }
+    }
+
+    function handleAction(action) {
+      triggerHaptic();
+      const numVal = parseFloat(currentValue);
+
+      switch(action) {
+        case 'clear':
+          playSound('clear');
+          currentValue = '0';
+          previousValue = null;
+          currentOperation = null;
+          shouldResetDisplay = false;
+          expressionDisplay.textContent = '';
+          updateDisplay();
+          break;
+        case 'backspace':
+          playSound('clear');
+          if (shouldResetDisplay) return;
+          currentValue = currentValue.length > 1 ? currentValue.slice(0, -1) : '0';
+          updateDisplay();
+          break;
+        case 'toggle-sign':
+          playSound('op');
+          if (currentValue !== '0' && currentValue !== 'Error') {
+            currentValue = (parseFloat(currentValue) * -1).toString();
+            updateDisplay();
+          }
+          break;
+        case 'percent':
+          playSound('op');
+          if (currentValue !== 'Error') {
+            currentValue = (parseFloat(currentValue) / 100).toString();
+            updateDisplay();
+          }
+          break;
+        case 'equals': calculateResult(); break;
+        case 'mc': playSound('clear'); memoryValue = 0; updateDisplay(); break;
+        case 'mr': playSound('op'); currentValue = memoryValue.toString(); shouldResetDisplay = true; updateDisplay(); break;
+        case 'm-add': playSound('op'); if (!isNaN(numVal)) memoryValue += numVal; shouldResetDisplay = true; updateDisplay(); break;
+        case 'm-sub': playSound('op'); if (!isNaN(numVal)) memoryValue -= numVal; shouldResetDisplay = true; updateDisplay(); break;
+        case 'sin': applyScientific(x => Math.sin(x * Math.PI / 180), 'sin'); break;
+        case 'cos': applyScientific(x => Math.cos(x * Math.PI / 180), 'cos'); break;
+        case 'tan': applyScientific(x => Math.tan(x * Math.PI / 180), 'tan'); break;
+        case 'log': applyScientific(x => Math.log10(x), 'log'); break;
+        case 'ln': applyScientific(x => Math.log(x), 'ln'); break;
+        case 'sqrt': applyScientific(x => Math.sqrt(x), '√'); break;
+        case 'pow': applyScientific(x => Math.pow(x, 2), 'sqr'); break;
+        case 'pi': playSound('num', '3'); currentValue = Math.PI.toString(); shouldResetDisplay = false; updateDisplay(); break;
+      }
+    }
+
+    function addToHistory(expression, result) {
+      history.unshift({ expression, result });
+      if (history.length > 20) history.pop();
+      renderHistory();
+    }
+
+    function renderHistory() {
+      if (history.length === 0) {
+        historyList.innerHTML = `<div class="text-center text-xs text-slate-400 py-8">No hay operaciones recientes</div>`;
+        return;
+      }
+
+      historyList.innerHTML = history.map((item, index) => `
+        <div class="p-2.5 rounded-xl bg-slate-100/60 dark:bg-slate-800/60 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 cursor-pointer transition-all btn-press" data-index="${index}">
+          <div class="text-xs text-slate-400 dark:text-slate-500 text-right">${item.expression}</div>
+          <div class="text-base font-bold text-slate-700 dark:text-slate-200 text-right">${formatNumber(item.result)}</div>
+        </div>
+      `).join('');
+
+      historyList.querySelectorAll('[data-index]').forEach(el => {
+        el.addEventListener('click', () => {
+          playSound('ui');
+          const idx = el.getAttribute('data-index');
+          currentValue = history[idx].result;
+          shouldResetDisplay = false;
+          updateDisplay();
+          toggleHistory(false);
+        });
+      });
+    }
+
+    function toggleHistory(show) {
+      playSound('ui');
+      if (show) {
+        historyOverlay.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-4');
+        historyOverlay.classList.add('opacity-100', 'pointer-events-auto', 'translate-y-0');
+      } else {
+        historyOverlay.classList.add('opacity-0', 'pointer-events-none', 'translate-y-4');
+        historyOverlay.classList.remove('opacity-100', 'pointer-events-auto', 'translate-y-0');
+      }
+    }
+
+    // 7. LÓGICA DE GRAFICADORA
+    function resizeCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return;
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function parseFunction(expr) {
+      if (!expr.trim()) return null;
+      let formatted = expr
+        .toLowerCase()
+        .replace(/sin/g, 'Math.sin')
+        .replace(/cos/g, 'Math.cos')
+        .replace(/tan/g, 'Math.tan')
+        .replace(/sqrt/g, 'Math.sqrt')
+        .replace(/abs/g, 'Math.abs')
+        .replace(/log/g, 'Math.log10')
+        .replace(/ln/g, 'Math.log')
+        .replace(/pi/g, 'Math.PI')
+        .replace(/\be\b/g, 'Math.E')
+        .replace(/\^/g, '**')
+        .replace(/(\d)(x|\(|Math)/g, '$1*$2')
+        .replace(/(\))(x|\(|Math|\d)/g, '$1*$2')
+        .replace(/(x)(\()/g, '$1*$2');
+
+      return new Function('x', `return ${formatted};`);
+    }
+
+    function drawGraph() {
+      const rect = canvas.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return;
+      
+      const dpr = window.devicePixelRatio || 1;
+      if (canvas.width !== Math.round(rect.width * dpr) || canvas.height !== Math.round(rect.height * dpr)) {
+        resizeCanvas();
+      }
+
+      const width = rect.width;
+      const height = rect.height;
+      ctx.clearRect(0, 0, width, height);
+
+      const centerX = width / 2 + offsetX;
+      const centerY = height / 2 + offsetY;
+
+      ctx.strokeStyle = 'rgba(30, 41, 59, 0.45)';
+      ctx.lineWidth = 0.5;
+      ctx.beginPath();
+      const subGridSize = scale / 2;
+      if (subGridSize > 8) {
+        for (let x = centerX % subGridSize; x < width; x += subGridSize) {
+          ctx.moveTo(x, 0); ctx.lineTo(x, height);
+        }
+        for (let y = centerY % subGridSize; y < height; y += subGridSize) {
+          ctx.moveTo(0, y); ctx.lineTo(width, y);
+        }
+      }
+      ctx.stroke();
+
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      const gridSize = scale;
+      const startGridX = centerX % gridSize;
+      for (let x = startGridX; x < width; x += gridSize) {
+        ctx.moveTo(x, 0); ctx.lineTo(x, height);
+      }
+      const startGridY = centerY % gridSize;
+      for (let y = startGridY; y < height; y += gridSize) {
+        ctx.moveTo(0, y); ctx.lineTo(width, y);
+      }
+      ctx.stroke();
+
+      ctx.strokeStyle = '#64748b';
+      ctx.lineWidth = 1.75;
+      ctx.beginPath();
+      ctx.moveTo(0, centerY); ctx.lineTo(width, centerY);
+      ctx.moveTo(centerX, 0); ctx.lineTo(centerX, height);
+      ctx.stroke();
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = `10px ${getComputedStyle(document.documentElement).getPropertyValue('--app-font') || 'Inter'}`;
+      ctx.textAlign = 'center';
+
+      const step = scale < 18 ? 5 : scale < 28 ? 2 : 1;
+
+      for (let x = startGridX; x < width; x += gridSize) {
+        const val = Math.round((x - centerX) / scale);
+        if (val !== 0 && val % step === 0) {
+          const labelY = Math.min(Math.max(centerY + 13, 12), height - 5);
+          ctx.fillText(val, x, labelY);
+        }
+      }
+      ctx.textAlign = 'right';
+      for (let y = startGridY; y < height; y += gridSize) {
+        const val = Math.round((centerY - y) / scale);
+        if (val !== 0 && val % step === 0) {
+          const labelX = Math.min(Math.max(centerX - 6, 22), width - 5);
+          ctx.fillText(val, labelX, y + 3);
+        }
+      }
+
+      try {
+        compiledFunc = parseFunction(functionInput.value);
+        if (!compiledFunc) return;
+        compiledFunc(1);
+        graphError.classList.add('hidden');
+
+        ctx.save();
+        ctx.strokeStyle = strokeColor;
+        ctx.lineWidth = 2.5;
+        ctx.shadowColor = strokeColor;
+        ctx.shadowBlur = 8;
+        ctx.beginPath();
+
+        let isFirstPoint = true;
+        for (let px = 0; px <= width; px += 1) {
+          const x = (px - centerX) / scale;
+          try {
+            const y = compiledFunc(x);
+            if (typeof y === 'number' && !isNaN(y) && isFinite(y)) {
+              const py = centerY - (y * scale);
+              if (py < -height * 2 || py > height * 3) {
+                isFirstPoint = true;
+                continue;
+              }
+              if (isFirstPoint) {
+                ctx.moveTo(px, py);
+                isFirstPoint = false;
+              } else {
+                ctx.lineTo(px, py);
+              }
+            } else {
+              isFirstPoint = true;
+            }
+          } catch(e) {
+            isFirstPoint = true;
+          }
+        }
+        ctx.stroke();
+        ctx.restore();
+
+        if (hoverMouseX !== null && hoverMouseX >= 0 && hoverMouseX <= width) {
+          const mathX = (hoverMouseX - centerX) / scale;
+          const mathY = compiledFunc(mathX);
+
+          if (typeof mathY === 'number' && !isNaN(mathY) && isFinite(mathY)) {
+            const pointPy = centerY - (mathY * scale);
+
+            ctx.save();
+            ctx.setLineDash([4, 4]);
+            ctx.strokeStyle = 'rgba(148, 163, 184, 0.5)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(hoverMouseX, 0);
+            ctx.lineTo(hoverMouseX, height);
+            ctx.stroke();
+            ctx.restore();
+
+            if (pointPy >= 0 && pointPy <= height) {
+              ctx.beginPath();
+              ctx.arc(hoverMouseX, pointPy, 5, 0, Math.PI * 2);
+              ctx.fillStyle = '#ffffff';
+              ctx.fill();
+              ctx.lineWidth = 2.5;
+              ctx.strokeStyle = strokeColor;
+              ctx.stroke();
+            }
+
+            coordBadge.classList.remove('hidden');
+            coordXEl.textContent = mathX.toFixed(2);
+            coordYEl.textContent = mathY.toFixed(2);
+          } else {
+            coordBadge.classList.add('hidden');
+          }
+        }
+      } catch(e) {
+        graphError.classList.remove('hidden');
+        coordBadge.classList.add('hidden');
+      }
+    }
+
+    // 8. EVENT LISTENERS DE PERSONALIZACIÓN Y COLOR AVANZADO
+    document.querySelectorAll('.custom-tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = btn.getAttribute('data-customtab');
+        document.querySelectorAll('.custom-tab-btn').forEach(b => {
+          b.className = "custom-tab-btn px-2.5 py-1 text-[11px] font-bold rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-all";
+        });
+        btn.className = "custom-tab-btn px-2.5 py-1 text-[11px] font-bold rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-btn-light dark:shadow-btn-dark transition-all";
+
+        ['themes', 'customcolors', 'style'].forEach(id => {
+          document.getElementById(`panel-${id}`).classList.toggle('hidden', id !== target);
+        });
+        playSound('ui');
+      });
+    });
+
+    colorMenuBtn.addEventListener('click', () => {
+      soundPanel.classList.add('hidden');
+      colorPalette.classList.toggle('hidden');
+      playSound('ui');
+    });
+
+    soundMenuBtn.addEventListener('click', () => {
+      colorPalette.classList.add('hidden');
+      soundPanel.classList.toggle('hidden');
+      playSound('ui');
+    });
+
+    // Paletas maestras de 1 clic
+    document.querySelectorAll('.preset-palette-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const key = btn.getAttribute('data-preset');
+        const preset = masterPresets[key];
+        if (!preset) return;
+        settings.useCustomColors = true;
+        settings.darkMode = preset.darkMode;
+        settings.customColors = { ...preset.colors };
+        applyAllAppearance();
+        playSound('equals');
+      });
+    });
+
+    document.querySelectorAll('.bg-opt').forEach(btn => {
+      btn.addEventListener('click', () => {
+        settings.useCustomColors = false;
+        settings.bgKey = btn.getAttribute('data-bg');
+        applyAllAppearance();
+        playSound('ui');
+      });
+    });
+
+    document.querySelectorAll('.color-opt').forEach(btn => {
+      btn.addEventListener('click', () => {
+        settings.useCustomColors = false;
+        settings.themeKey = btn.getAttribute('data-theme');
+        applyAllAppearance();
+        playSound('ui');
+      });
+    });
+
+    // Selección del elemento objetivo en Estudio de Color
+    document.querySelectorAll('.color-target-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        activeColorTarget = btn.getAttribute('data-target');
+        syncColorStudioUI();
+        playSound('ui');
+      });
+    });
+
+    // Interacción con el espectro HSV (Saturación / Brillo)
+    let isDraggingSV = false;
+    function updateSVFromPointer(clientX, clientY) {
+      const rect = hsvSatValBox.getBoundingClientRect();
+      const s = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
+      const v = Math.max(0, Math.min(100, 100 - ((clientY - rect.top) / rect.height) * 100));
+      const currentHsv = hexToHsv(settings.customColors[activeColorTarget]);
+      settings.useCustomColors = true;
+      settings.customColors[activeColorTarget] = hsvToHex(currentHsv.h, s, v);
+      applyAllAppearance();
+    }
+
+    hsvSatValBox.addEventListener('mousedown', (e) => {
+      isDraggingSV = true;
+      updateSVFromPointer(e.clientX, e.clientY);
+    });
+    window.addEventListener('mousemove', (e) => {
+      if (isDraggingSV) updateSVFromPointer(e.clientX, e.clientY);
+    });
+    window.addEventListener('mouseup', () => { isDraggingSV = false; });
+
+    hsvSatValBox.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        isDraggingSV = true;
+        updateSVFromPointer(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    }, { passive: true });
+    window.addEventListener('touchmove', (e) => {
+      if (isDraggingSV && e.touches.length === 1) {
+        updateSVFromPointer(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    }, { passive: true });
+    window.addEventListener('touchend', () => { isDraggingSV = false; });
+
+    // Interacción con la barra de Matiz (Hue)
+    let isDraggingHue = false;
+    function updateHueFromPointer(clientX) {
+      const rect = hsvHueStrip.getBoundingClientRect();
+      const h = Math.max(0, Math.min(359, Math.round(((clientX - rect.left) / rect.width) * 360)));
+      const currentHsv = hexToHsv(settings.customColors[activeColorTarget]);
+      settings.useCustomColors = true;
+      settings.customColors[activeColorTarget] = hsvToHex(h, currentHsv.s || 80, currentHsv.v || 90);
+      applyAllAppearance();
+    }
+
+    hsvHueStrip.addEventListener('mousedown', (e) => {
+      isDraggingHue = true;
+      updateHueFromPointer(e.clientX);
+    });
+    window.addEventListener('mousemove', (e) => {
+      if (isDraggingHue) updateHueFromPointer(e.clientX);
+    });
+    window.addEventListener('mouseup', () => { isDraggingHue = false; });
+
+    hsvHueStrip.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        isDraggingHue = true;
+        updateHueFromPointer(e.touches[0].clientX);
+      }
+    }, { passive: true });
+    window.addEventListener('touchmove', (e) => {
+      if (isDraggingHue && e.touches.length === 1) {
+        updateHueFromPointer(e.touches[0].clientX);
+      }
+    }, { passive: true });
+    window.addEventListener('touchend', () => { isDraggingHue = false; });
+
+    // Entrada manual de código HEX y selector nativo sincronizado
+    hexCodeInput.addEventListener('input', (e) => {
+      const valid = normalizeHex(e.target.value);
+      if (valid) {
+        settings.useCustomColors = true;
+        settings.customColors[activeColorTarget] = valid;
+        applyAllAppearance();
+      }
+    });
+
+    nativeColorSync.addEventListener('input', (e) => {
+      settings.useCustomColors = true;
+      settings.customColors[activeColorTarget] = e.target.value;
+      applyAllAppearance();
+    });
+
+    // Copiar código HEX al portapapeles
+    copyHexBtn.addEventListener('click', () => {
+      const hexText = '#' + hexCodeInput.value.toUpperCase();
+      const tempInput = document.createElement('input');
+      tempInput.value = hexText;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      try {
+        document.execCommand('copy');
+        copyHexIcon.className = 'fas fa-check text-emerald-500';
+        setTimeout(() => { copyHexIcon.className = 'fas fa-copy'; }, 1200);
+      } catch (err) {}
+      document.body.removeChild(tempInput);
+      playSound('ui');
+    });
+
+    // Generar Armonía Cromática Aleatoria Coherente
+    document.getElementById('randomHarmonyBtn').addEventListener('click', () => {
+      const baseHue = Math.floor(Math.random() * 360);
+      const isDark = settings.darkMode;
+      const compHue = (baseHue + 35) % 360;
+      const accentHue = (baseHue + 150) % 360;
+
+      settings.useCustomColors = true;
+      if (isDark) {
+        settings.customColors = {
+          bg: hsvToHex(baseHue, 65, 10),
+          bg2: hsvToHex(compHue, 70, 18),
+          panel: hsvToHex(baseHue, 50, 14),
+          display: hsvToHex(baseHue, 75, 7),
+          num: hsvToHex(baseHue, 35, 22),
+          op: hsvToHex(compHue, 65, 36),
+          func: hsvToHex(baseHue, 30, 28),
+          equals: hsvToHex(accentHue, 78, 88),
+          stroke: hsvToHex(accentHue, 85, 95)
+        };
+      } else {
+        settings.customColors = {
+          bg: hsvToHex(baseHue, 18, 97),
+          bg2: hsvToHex(compHue, 24, 94),
+          panel: '#ffffff',
+          display: hsvToHex(baseHue, 14, 92),
+          num: '#ffffff',
+          op: hsvToHex(compHue, 35, 90),
+          func: hsvToHex(baseHue, 20, 88),
+          equals: hsvToHex(accentHue, 75, 65),
+          stroke: hsvToHex(accentHue, 80, 55)
+        };
+      }
+      applyAllAppearance();
+      playSound('equals');
+    });
+
+    // Interruptor de Auto-Contraste Inteligente
+    document.getElementById('autoContrastToggleBtn').addEventListener('click', () => {
+      settings.autoContrast = !settings.autoContrast;
+      applyAllAppearance();
+      playSound('ui');
+    });
+
+    // Dirección del degradado de fondo
+    document.querySelectorAll('.grad-dir-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        settings.useCustomColors = true;
+        settings.gradientDir = btn.getAttribute('data-dir');
+        applyAllAppearance();
+        playSound('ui');
+      });
+    });
+
+    document.querySelectorAll('.shape-opt').forEach(btn => {
+      btn.addEventListener('click', () => {
+        settings.btnShape = btn.getAttribute('data-shape');
+        applyAllAppearance();
+        playSound('ui');
+      });
+    });
+
+    document.querySelectorAll('.font-opt').forEach(btn => {
+      btn.addEventListener('click', () => {
+        settings.fontType = btn.getAttribute('data-font');
+        applyAllAppearance();
+        playSound('ui');
+      });
+    });
+
+    document.getElementById('glassOpacitySlider').addEventListener('input', (e) => {
+      settings.glassOpacity = parseInt(e.target.value, 10);
+      applyAllAppearance();
+    });
+
+    document.getElementById('displaySizeSlider').addEventListener('input', (e) => {
+      settings.displayFontSize = parseInt(e.target.value, 10);
+      applyAllAppearance();
+    });
+
+    document.getElementById('btnSizeSlider').addEventListener('input', (e) => {
+      settings.btnFontSize = parseInt(e.target.value, 10);
+      applyAllAppearance();
+    });
+
+    document.getElementById('resetAllCustomBtn').addEventListener('click', () => {
+      settings = JSON.parse(JSON.stringify(defaultSettings));
+      applyAllAppearance();
+      updateSoundControlsUI();
+      playSound('clear');
+    });
+
+    function toggleAppFullscreen() {
+      isFullscreenMode = !isFullscreenMode;
+      playSound('ui');
+
+      if (isFullscreenMode) {
+        mainContainer.classList.add('app-fullscreen');
+        fullscreenIcon.className = 'fas fa-compress text-xs text-indigo-500';
+        if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        }
+      } else {
+        mainContainer.classList.remove('app-fullscreen');
+        fullscreenIcon.className = 'fas fa-expand text-xs';
+        if (document.fullscreenElement && document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {});
+        }
+      }
+
+      setTimeout(() => {
+        if (!grapherTab.classList.contains('hidden')) {
+          resizeCanvas();
+          drawGraph();
+        }
+      }, 100);
+    }
+
+    fullscreenToggleBtn.addEventListener('click', toggleAppFullscreen);
+
+    document.addEventListener('fullscreenchange', () => {
+      if (!document.fullscreenElement && isFullscreenMode) {
+        isFullscreenMode = false;
+        mainContainer.classList.remove('app-fullscreen');
+        fullscreenIcon.className = 'fas fa-expand text-xs';
+        setTimeout(() => {
+          if (!grapherTab.classList.contains('hidden')) {
+            resizeCanvas();
+            drawGraph();
+          }
+        }, 100);
+      }
+    });
+
+    tabCalcBtn.addEventListener('click', () => {
+      playSound('ui');
+      calculatorTab.classList.remove('hidden');
+      grapherTab.classList.add('hidden');
+      if (!isFullscreenMode) {
+        mainContainer.classList.remove('max-w-3xl');
+        mainContainer.classList.add('max-w-md');
+      }
+      tabCalcBtn.className = "px-3 py-1.5 text-xs font-bold rounded-xl bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 shadow-btn-light dark:shadow-btn-dark transition-all flex items-center space-x-1.5";
+      tabGraphBtn.className = "px-3 py-1.5 text-xs font-bold rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-all flex items-center space-x-1.5";
+    });
+
+    tabGraphBtn.addEventListener('click', () => {
+      playSound('ui');
+      calculatorTab.classList.add('hidden');
+      grapherTab.classList.remove('hidden');
+      if (!isFullscreenMode && isWideMode) {
+        mainContainer.classList.remove('max-w-md');
+        mainContainer.classList.add('max-w-3xl');
+      }
+      tabGraphBtn.className = "px-3 py-1.5 text-xs font-bold rounded-xl bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 shadow-btn-light dark:shadow-btn-dark transition-all flex items-center space-x-1.5";
+      tabCalcBtn.className = "px-3 py-1.5 text-xs font-bold rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-all flex items-center space-x-1.5";
+      setTimeout(() => {
+        resizeCanvas();
+        drawGraph();
+      }, 60);
+    });
+
+    volumeSlider.addEventListener('input', (e) => {
+      settings.volume = parseInt(e.target.value, 10) / 100;
+      if (settings.volume > 0) previousVolume = settings.volume;
+      updateSoundControlsUI();
+      saveSettings();
+    });
+
+    volumeSlider.addEventListener('change', () => {
+      if (settings.volume > 0) playSound('num', '5');
+    });
+
+    pitchSlider.addEventListener('input', (e) => {
+      settings.pitch = parseInt(e.target.value, 10) / 100;
+      updateSoundControlsUI();
+      saveSettings();
+    });
+
+    pitchSlider.addEventListener('change', () => {
+      playSound('num', '5');
+    });
+
+    document.getElementById('testChordBtn').addEventListener('click', () => {
+      playSound('equals');
+    });
+
+    muteQuickBtn.addEventListener('click', () => {
+      if (settings.volume > 0) {
+        previousVolume = settings.volume;
+        settings.volume = 0;
+      } else {
+        settings.volume = previousVolume || 0.7;
+        playSound('num', '5');
+      }
+      updateSoundControlsUI();
+      saveSettings();
+    });
+
+    document.getElementById('echoToggleBtn').addEventListener('click', () => {
+      settings.echo = !settings.echo;
+      updateSoundControlsUI();
+      saveSettings();
+      playSound('num', '7');
+    });
+
+    document.getElementById('hapticToggleBtn').addEventListener('click', () => {
+      settings.haptic = !settings.haptic;
+      if (settings.haptic && navigator.vibrate) {
+        try { navigator.vibrate(20); } catch (e) {}
+      }
+      updateSoundControlsUI();
+      saveSettings();
+      playSound('ui');
+    });
+
+    document.querySelectorAll('.sound-pack-opt').forEach(btn => {
+      btn.addEventListener('click', () => {
+        settings.soundPack = btn.getAttribute('data-pack');
+        updateSoundPackUI();
+        saveSettings();
+        playSound('equals');
+      });
+    });
+
+    document.querySelectorAll('.size-preset').forEach(btn => {
+      btn.addEventListener('click', () => {
+        playSound('ui');
+        if (isFullscreenMode) toggleAppFullscreen();
+        const newHeight = btn.getAttribute('data-height');
+        canvas.style.height = `${newHeight}px`;
+
+        document.querySelectorAll('.size-preset').forEach(b => {
+          b.className = "size-preset px-2 py-1 text-[10px] font-bold rounded-lg transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white";
+        });
+        btn.className = "size-preset px-2 py-1 text-[10px] font-bold rounded-lg transition-all bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm";
+
+        resizeCanvas();
+        drawGraph();
+      });
+    });
+
+    expandWidthBtn.addEventListener('click', () => {
+      playSound('ui');
+      if (isFullscreenMode) {
+        toggleAppFullscreen();
+        return;
+      }
+      isWideMode = !isWideMode;
+      if (isWideMode) {
+        mainContainer.classList.remove('max-w-md');
+        mainContainer.classList.add('max-w-3xl');
+        expandWidthIcon.className = "fas fa-arrows-alt-h text-indigo-500";
+      } else {
+        mainContainer.classList.remove('max-w-3xl');
+        mainContainer.classList.add('max-w-md');
+        expandWidthIcon.className = "fas fa-arrows-alt-h";
+      }
+      setTimeout(() => {
+        resizeCanvas();
+        drawGraph();
+      }, 310);
+    });
+
+    function startHeightResize(clientY) {
+      if (isFullscreenMode) return;
+      isResizingHeight = true;
+      resizeStartY = clientY;
+      resizeStartHeight = canvas.getBoundingClientRect().height;
+      document.querySelectorAll('.size-preset').forEach(b => {
+        b.className = "size-preset px-2 py-1 text-[10px] font-bold rounded-lg transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white";
+      });
+    }
+
+    function doHeightResize(clientY) {
+      if (!isResizingHeight) return;
+      const deltaY = clientY - resizeStartY;
+      const newHeight = Math.min(Math.max(resizeStartHeight + deltaY, 150), 600);
+      canvas.style.height = `${newHeight}px`;
+      resizeCanvas();
+      drawGraph();
+    }
+
+    resizeHandle.addEventListener('mousedown', (e) => { e.preventDefault(); startHeightResize(e.clientY); });
+    window.addEventListener('mousemove', (e) => doHeightResize(e.clientY));
+    window.addEventListener('mouseup', () => { isResizingHeight = false; });
+
+    resizeHandle.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) startHeightResize(e.touches[0].clientY);
+    }, { passive: true });
+    window.addEventListener('touchmove', (e) => {
+      if (isResizingHeight && e.touches.length === 1) doHeightResize(e.touches[0].clientY);
+    }, { passive: true });
+    window.addEventListener('touchend', () => { isResizingHeight = false; });
+
+    document.querySelectorAll('.math-insert').forEach(btn => {
+      btn.addEventListener('click', () => {
+        playSound('num', '3');
+        const textToInsert = btn.getAttribute('data-insert');
+        const start = functionInput.selectionStart;
+        const end = functionInput.selectionEnd;
+        const currentVal = functionInput.value;
+        
+        functionInput.value = currentVal.substring(0, start) + textToInsert + currentVal.substring(end);
+        functionInput.focus();
+        functionInput.selectionStart = functionInput.selectionEnd = start + textToInsert.length;
+        drawGraph();
+      });
+    });
+
+    clearFuncBtn.addEventListener('click', () => {
+      playSound('clear');
+      functionInput.value = '';
+      functionInput.focus();
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawGraph();
+    });
+
+    plotBtn.addEventListener('click', () => { playSound('equals'); drawGraph(); });
+    functionInput.addEventListener('input', drawGraph);
+    functionInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { playSound('equals'); drawGraph(); }
+    });
+
+    zoomInBtn.addEventListener('click', () => { playSound('op'); scale *= 1.25; drawGraph(); });
+    zoomOutBtn.addEventListener('click', () => { playSound('op'); scale /= 1.25; drawGraph(); });
+    resetViewBtn.addEventListener('click', () => { playSound('clear'); scale = 35; offsetX = 0; offsetY = 0; drawGraph(); });
+
+    document.querySelectorAll('.quick-func').forEach(btn => {
+      btn.addEventListener('click', () => {
+        playSound('equals');
+        functionInput.value = btn.getAttribute('data-expr');
+        drawGraph();
+      });
+    });
+
+    canvas.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      startX = e.clientX - offsetX;
+      startY = e.clientY - offsetY;
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      hoverMouseX = e.clientX - rect.left;
+      if (!isDragging) drawGraph();
+    });
+
+    canvas.addEventListener('mouseleave', () => {
+      hoverMouseX = null;
+      coordBadge.classList.add('hidden');
+      drawGraph();
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      offsetX = e.clientX - startX;
+      offsetY = e.clientY - startY;
+      drawGraph();
+    });
+
+    window.addEventListener('mouseup', () => isDragging = false);
+
+    canvas.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        isDragging = true;
+        startX = e.touches[0].clientX - offsetX;
+        startY = e.touches[0].clientY - offsetY;
+        const rect = canvas.getBoundingClientRect();
+        hoverMouseX = e.touches[0].clientX - rect.left;
+      }
+    });
+
+    canvas.addEventListener('touchmove', (e) => {
+      if (isDragging && e.touches.length === 1) {
+        offsetX = e.touches[0].clientX - startX;
+        offsetY = e.touches[0].clientY - startY;
+        const rect = canvas.getBoundingClientRect();
+        hoverMouseX = e.touches[0].clientX - rect.left;
+        drawGraph();
+      }
+    });
+
+    canvas.addEventListener('touchend', () => {
+      isDragging = false;
+      hoverMouseX = null;
+      coordBadge.classList.add('hidden');
+      drawGraph();
+    });
+
+    canvas.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      if (e.deltaY < 0) scale *= 1.12;
+      else scale /= 1.12;
+      drawGraph();
+    }, { passive: false });
+
+    document.querySelectorAll('.btn-calc').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const val = btn.getAttribute('data-val');
+        const action = btn.getAttribute('data-action');
+        if (val !== null) handleNumber(val);
+        else if (['add', 'subtract', 'multiply', 'divide'].includes(action)) handleOperation(action);
+        else if (action) handleAction(action);
+      });
+    });
+
+    themeToggleBtn.addEventListener('click', () => {
+      settings.darkMode = !settings.darkMode;
+      applyAllAppearance();
+      playSound('ui');
+    });
+
+    scientificToggleBtn.addEventListener('click', () => {
+      scientificDrawer.classList.toggle('open');
+      sciIcon.classList.toggle('rotate-180');
+      playSound('ui');
+    });
+
+    historyToggleBtn.addEventListener('click', () => toggleHistory(true));
+    closeHistoryBtn.addEventListener('click', () => toggleHistory(false));
+    clearHistoryBtn.addEventListener('click', () => { history = []; renderHistory(); playSound('clear'); });
+
+    function getKeyboardAction(key) {
+      switch(key) {
+        case '+': return 'add';
+        case '-': return 'subtract';
+        case '*': return 'multiply';
+        case '/': return 'divide';
+        case 'Enter':
+        case '=': return 'equals';
+        case 'Backspace': return 'backspace';
+        case 'Escape': return 'clear';
+        case '%': return 'percent';
+        default: return '';
+      }
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (document.activeElement === functionInput || document.activeElement === hexCodeInput) return;
+      if (!calculatorTab.classList.contains('hidden')) {
+        if (e.key >= '0' && e.key <= '9') handleNumber(e.key);
+        if (e.key === '.' || e.key === ',') handleNumber('.');
+        if (e.key === '+') handleOperation('add');
+        if (e.key === '-') handleOperation('subtract');
+        if (e.key === '*') handleOperation('multiply');
+        if (e.key === '/') { e.preventDefault(); handleOperation('divide'); }
+        if (e.key === 'Enter' || e.key === '=') { e.preventDefault(); calculateResult(); }
+        if (e.key === 'Backspace') handleAction('backspace');
+        if (e.key === 'Escape') handleAction('clear');
+        if (e.key === '%') handleAction('percent');
+
+        const keyBtn = document.querySelector(`[data-val="${e.key}"], [data-action="${getKeyboardAction(e.key)}"]`);
+        if (keyBtn) {
+          keyBtn.classList.add('active-key');
+          setTimeout(() => keyBtn.classList.remove('active-key'), 120);
+        }
+      }
+    });
+
+    window.addEventListener('resize', () => {
+      if (!grapherTab.classList.contains('hidden')) {
+        resizeCanvas();
+        drawGraph();
+      }
+    });
+    window.addEventListener('orientationchange', () => {
+      setTimeout(() => {
+        if (!grapherTab.classList.contains('hidden')) {
+          resizeCanvas();
+          drawGraph();
+        }
+      }, 150);
+    });
+
+    // 9. INICIALIZACIÓN
+    applyAllAppearance();
+    updateSoundControlsUI();
+    updateDisplay();
+  </script>
+</body>
+</html>
