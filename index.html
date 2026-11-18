@@ -1,0 +1,3599 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0f172a">
+  <title>Calculadora, Graficadora y Estudio Piano Pro</title>
+  <link id="pwaManifestLink" rel="manifest">
+  <style>
+    /* ==========================================================================
+       1. SISTEMA DE DISEÑO AUTÓNOMO (100% OFFLINE - SIN DEPENDENCIAS EXTERNAS)
+       ========================================================================== */
+    :root {
+      --app-font: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --font-serif: Georgia, Cambria, "Times New Roman", Times, serif;
+      --font-modern: "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+      --accent-color: #6366f1;
+      --hsv-hue: 239;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--app-font);
+      user-select: none;
+      -webkit-user-select: none;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.5rem;
+      transition: background 0.45s ease, color 0.3s ease;
+      color: #1e293b;
+      overflow-x: hidden;
+    }
+
+    html.dark body {
+      color: #f1f5f9;
+    }
+
+    @media (min-width: 640px) {
+      body { padding: 1rem; }
+    }
+
+    button, input, select {
+      font-family: inherit;
+      color: inherit;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      background: transparent;
+    }
+
+    /* Fondos Ambientales */
+    .bg-aurora { background: linear-gradient(135deg, #e0e7ff 0%, #faf5ff 50%, #fce7f3 100%); }
+    html.dark .bg-aurora { background: linear-gradient(135deg, #020617 0%, #0f172a 50%, #1e1b4b 100%); }
+
+    .bg-cyberpunk { background: linear-gradient(135deg, #581c87 0%, #020617 50%, #164e63 100%); }
+    html.dark .bg-cyberpunk { background: linear-gradient(135deg, #000000 0%, #3b0764 50%, #083344 100%); }
+
+    .bg-minimal { background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%); }
+    html.dark .bg-minimal { background: linear-gradient(135deg, #020617 0%, #0f172a 50%, #1e293b 100%); }
+
+    .bg-midnight { background: linear-gradient(135deg, #020617 0%, #172554 50%, #0f172a 100%); }
+    html.dark .bg-midnight { background: linear-gradient(135deg, #000000 0%, #020617 50%, #172554 100%); }
+
+    .bg-sunset { background: linear-gradient(135deg, #ffe4e6 0%, #fff7ed 50%, #fef3c7 100%); }
+    html.dark .bg-sunset { background: linear-gradient(135deg, #020617 0%, #4c0519 50%, #451a03 100%); }
+
+    .bg-forest { background: linear-gradient(135deg, #d1fae5 0%, #f0fdfa 50%, #dcfce7 100%); }
+    html.dark .bg-forest { background: linear-gradient(135deg, #020617 0%, #022c22 50%, #0f172a 100%); }
+
+    .bg-ocean { background: linear-gradient(135deg, #e0f2fe 0%, #eff6ff 50%, #cffafe 100%); }
+    html.dark .bg-ocean { background: linear-gradient(135deg, #020617 0%, #082f49 50%, #172554 100%); }
+
+    .bg-lavender { background: linear-gradient(135deg, #ede9fe 0%, #faf5ff 50%, #fae8ff 100%); }
+    html.dark .bg-lavender { background: linear-gradient(135deg, #020617 0%, #2e1065 50%, #3b0764 100%); }
+
+    /* Clases de Tipografía */
+    .font-preview-sans { font-family: var(--font-sans) !important; }
+    .font-preview-mono { font-family: var(--font-mono) !important; }
+    .font-preview-serif { font-family: var(--font-serif) !important; }
+    .font-preview-poppins { font-family: var(--font-modern) !important; }
+
+    /* Paneles Glassmorphism */
+    .glass-panel {
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+
+    #mainContainer {
+      position: relative;
+      width: 100%;
+      max-width: 28rem;
+      background: rgba(255, 255, 255, 0.78);
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      border-radius: 1.5rem;
+      padding: 1rem;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+      transition: all 0.3s ease;
+    }
+
+    @media (min-width: 640px) {
+      #mainContainer { padding: 1.35rem; }
+    }
+
+    html.dark #mainContainer {
+      background: rgba(15, 23, 42, 0.78);
+      border-color: rgba(51, 65, 85, 0.55);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+
+    #mainContainer.max-w-3xl { max-width: 48rem; }
+
+    #mainContainer.app-fullscreen {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100dvh;
+      max-width: 100vw !important;
+      border-radius: 0 !important;
+      margin: 0 !important;
+      z-index: 40;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    #mainContainer.app-fullscreen #calculatorTab:not(.hidden) {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    #mainContainer.app-fullscreen #calcMainGrid { flex: 1; }
+    #mainContainer.app-fullscreen .btn-calc { height: 100% !important; min-height: 3rem; }
+
+    /* Utilidades de Layout & Espaciado */
+    .hidden { display: none !important; }
+    .block { display: block; }
+    .flex { display: flex; }
+    .inline-flex { display: inline-flex; }
+    .grid { display: grid; }
+    .flex-col { flex-direction: column; }
+    .flex-row { flex-direction: row; }
+    .flex-wrap { flex-wrap: wrap; }
+    .flex-1 { flex: 1 1 0%; }
+    .shrink-0 { flex-shrink: 0; }
+    .items-center { align-items: center; }
+    .items-end { align-items: flex-end; }
+    .justify-between { justify-content: space-between; }
+    .justify-center { justify-content: center; }
+    .justify-end { justify-content: flex-end; }
+
+    .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .grid-cols-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .grid-cols-8 { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+
+    .gap-1 { gap: 0.25rem; }
+    .gap-1\.5 { gap: 0.375rem; }
+    .gap-2 { gap: 0.5rem; }
+    .gap-2\.5 { gap: 0.625rem; }
+    .space-x-1 > * + * { margin-left: 0.25rem; }
+    .space-x-1\.5 > * + * { margin-left: 0.375rem; }
+    .space-x-2 > * + * { margin-left: 0.5rem; }
+    .space-y-1 > * + * { margin-top: 0.25rem; }
+    .space-y-1\.5 > * + * { margin-top: 0.375rem; }
+    .space-y-2 > * + * { margin-top: 0.5rem; }
+    .space-y-2\.5 > * + * { margin-top: 0.625rem; }
+    .space-y-3 > * + * { margin-top: 0.75rem; }
+
+    .mb-1 { margin-bottom: 0.25rem; }
+    .mb-1\.5 { margin-bottom: 0.375rem; }
+    .mb-2 { margin-bottom: 0.5rem; }
+    .mb-2\.5 { margin-bottom: 0.625rem; }
+    .mb-3 { margin-bottom: 0.75rem; }
+    .mb-3\.5 { margin-bottom: 0.875rem; }
+    .mb-4 { margin-bottom: 1rem; }
+    .mt-1 { margin-top: 0.25rem; }
+    .mr-1 { margin-right: 0.25rem; }
+    .mr-1\.5 { margin-right: 0.375rem; }
+    .ml-1 { margin-left: 0.25rem; }
+    .ml-1\.5 { margin-left: 0.375rem; }
+
+    .p-1 { padding: 0.25rem; }
+    .p-1\.5 { padding: 0.375rem; }
+    .p-2 { padding: 0.5rem; }
+    .p-2\.5 { padding: 0.625rem; }
+    .p-3 { padding: 0.75rem; }
+    .p-3\.5 { padding: 0.875rem; }
+    .p-4 { padding: 1rem; }
+    .p-5 { padding: 1.25rem; }
+    .px-1\.5 { padding-left: 0.375rem; padding-right: 0.375rem; }
+    .px-2 { padding-left: 0.5rem; padding-right: 0.5rem; }
+    .px-2\.5 { padding-left: 0.625rem; padding-right: 0.625rem; }
+    .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+    .px-3\.5 { padding-left: 0.875rem; padding-right: 0.875rem; }
+    .px-4 { padding-left: 1rem; padding-right: 1rem; }
+    .py-0\.5 { padding-top: 0.125rem; padding-bottom: 0.125rem; }
+    .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+    .py-1\.5 { padding-top: 0.375rem; padding-bottom: 0.375rem; }
+    .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+    .py-8 { padding-top: 2rem; padding-bottom: 2rem; }
+    .pb-1\.5 { padding-bottom: 0.375rem; }
+    .pb-2 { padding-bottom: 0.5rem; }
+    .pt-1 { padding-top: 0.25rem; }
+    .pt-2 { padding-top: 0.5rem; }
+    .pt-3 { padding-top: 0.75rem; }
+
+    .w-full { width: 100%; }
+    .w-6 { width: 1.5rem; }
+    .w-7 { width: 1.75rem; }
+    .w-8 { width: 2rem; }
+    .w-9 { width: 2.25rem; }
+    .w-10 { width: 2.5rem; }
+    .h-3\.5 { height: 0.875rem; }
+    .h-4 { height: 1rem; }
+    .h-6 { height: 1.5rem; }
+    .h-7 { height: 1.75rem; }
+    .h-8 { height: 2rem; }
+    .h-9 { height: 2.25rem; }
+    .h-10 { height: 2.5rem; }
+    .h-12 { height: 3rem; }
+    .h-20 { height: 5rem; }
+    .h-24 { height: 6rem; }
+    .h-36 { height: 9rem; }
+    .min-h-\[110px\] { min-height: 110px; }
+
+    /* Radios de borde */
+    .rounded-md { border-radius: 0.375rem; }
+    .rounded-lg { border-radius: 0.5rem; }
+    .rounded-xl { border-radius: 0.75rem; }
+    .rounded-2xl { border-radius: 1rem; }
+    .rounded-3xl { border-radius: 1.5rem; }
+    .rounded-full { border-radius: 9999px; }
+
+    /* Tipografía */
+    .text-\[8px\] { font-size: 8px; }
+    .text-\[9px\] { font-size: 9px; }
+    .text-\[10px\] { font-size: 10px; }
+    .text-\[11px\] { font-size: 11px; }
+    .text-xs { font-size: 0.75rem; line-height: 1rem; }
+    .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+    .text-base { font-size: 1rem; line-height: 1.5rem; }
+    .text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
+    .font-medium { font-weight: 500; }
+    .font-semibold { font-weight: 600; }
+    .font-bold { font-weight: 700; }
+    .uppercase { text-transform: uppercase; }
+    .italic { font-style: italic; }
+    .tracking-wider { letter-spacing: 0.05em; }
+    .tracking-tight { letter-spacing: -0.025em; }
+    .text-right { text-align: right; }
+    .text-center { text-align: center; }
+    .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .whitespace-nowrap { white-space: nowrap; }
+
+    /* Colores semánticos */
+    .text-slate-400 { color: #94a3b8; }
+    .text-slate-500 { color: #64748b; }
+    .text-slate-600 { color: #475569; }
+    .text-slate-700 { color: #334155; }
+    .text-slate-800 { color: #1e293b; }
+    html.dark .dark\:text-slate-100 { color: #f1f5f9; }
+    html.dark .dark\:text-slate-200 { color: #e2e8f0; }
+    html.dark .dark\:text-slate-300 { color: #cbd5e1; }
+    html.dark .dark\:text-slate-400 { color: #94a3b8; }
+    html.dark .dark\:text-white { color: #ffffff; }
+
+    .text-indigo-500 { color: #6366f1; }
+    html.dark .dark\:text-indigo-300 { color: #a5b4fc; }
+    html.dark .dark\:text-indigo-400 { color: #818cf8; }
+    .text-emerald-500 { color: #10b981; }
+    html.dark .dark\:text-emerald-400 { color: #34d399; }
+    .text-rose-500 { color: #f43f5e; }
+    .text-pink-500 { color: #ec4899; }
+    .text-amber-400 { color: #fbbf24; }
+    .text-white { color: #ffffff; }
+
+    /* Íconos SVG inline */
+    .svg-icon {
+      width: 1em;
+      height: 1em;
+      display: inline-block;
+      vertical-align: -0.125em;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2.1;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      flex-shrink: 0;
+    }
+    .svg-icon-fill {
+      fill: currentColor;
+      stroke: none;
+    }
+
+    /* Superficies y botones */
+    .nav-pill-group {
+      background: rgba(226, 232, 240, 0.72);
+      border: 1px solid rgba(255, 255, 255, 0.45);
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.06);
+    }
+    html.dark .nav-pill-group {
+      background: rgba(30, 41, 59, 0.75);
+      border-color: rgba(51, 65, 85, 0.55);
+    }
+
+    .nav-tab-active {
+      background: #ffffff;
+      color: #1e293b;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.8);
+    }
+    html.dark .nav-tab-active {
+      background: #334155;
+      color: #f8fafc;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06);
+    }
+
+    .nav-tab-inactive {
+      color: #475569;
+    }
+    html.dark .nav-tab-inactive {
+      color: #94a3b8;
+    }
+
+    .ui-surface-btn {
+      background: rgba(255, 255, 255, 0.82);
+      border: 1px solid rgba(203, 213, 225, 0.65);
+      color: #334155;
+      box-shadow: 0 3px 5px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.8);
+    }
+    html.dark .ui-surface-btn {
+      background: rgba(30, 41, 59, 0.82);
+      border-color: rgba(51, 65, 85, 0.6);
+      color: #e2e8f0;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05);
+    }
+
+    .sub-card-panel {
+      background: rgba(255, 255, 255, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+    }
+    html.dark .sub-card-panel {
+      background: rgba(15, 23, 42, 0.72);
+      border-color: rgba(51, 65, 85, 0.65);
+      box-shadow: 0 14px 35px rgba(0, 0, 0, 0.45);
+    }
+
+    .soft-box {
+      background: rgba(241, 245, 249, 0.72);
+      border: 1px solid rgba(203, 213, 225, 0.55);
+    }
+    html.dark .soft-box {
+      background: rgba(30, 41, 59, 0.62);
+      border-color: rgba(51, 65, 85, 0.55);
+    }
+
+    .calc-key-surface {
+      transition: transform 0.08s ease, background-color 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.7);
+    }
+    html.dark .calc-key-surface {
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.05);
+    }
+    .calc-key-surface:hover { filter: brightness(1.06); }
+    .calc-key-surface:active, .calc-key-surface.active-key { transform: scale(0.95); }
+
+    /* Estilos de teclas de calculadora por defecto y temas */
+    .key-num-default {
+      background: rgba(255, 255, 255, 0.85);
+      color: #1e293b;
+      border: 1px solid rgba(203, 213, 225, 0.6);
+    }
+    html.dark .key-num-default {
+      background: rgba(30, 41, 59, 0.85);
+      color: #f1f5f9;
+      border-color: rgba(51, 65, 85, 0.5);
+    }
+
+    .key-func-default {
+      background: rgba(226, 232, 240, 0.75);
+      color: #334155;
+      border: 1px solid rgba(203, 213, 225, 0.5);
+    }
+    html.dark .key-func-default {
+      background: rgba(51, 65, 85, 0.65);
+      color: #e2e8f0;
+      border-color: rgba(71, 85, 105, 0.45);
+    }
+
+    /* Variantes de temas para operadores e igual */
+    .theme-indigo-op { background: #e0e7ff; color: #4f46e5; border: 1px solid rgba(165, 180, 252, 0.5); font-weight: 700; }
+    html.dark .theme-indigo-op { background: rgba(30, 27, 75, 0.65); color: #818cf8; border-color: rgba(55, 48, 163, 0.45); }
+    .theme-indigo-eq { background: linear-gradient(90deg, #6366f1, #9333ea); color: #fff; font-weight: 700; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35); }
+
+    .theme-emerald-op { background: #d1fae5; color: #059669; border: 1px solid rgba(110, 231, 183, 0.5); font-weight: 700; }
+    html.dark .theme-emerald-op { background: rgba(6, 78, 59, 0.65); color: #34d399; border-color: rgba(6, 95, 70, 0.45); }
+    .theme-emerald-eq { background: linear-gradient(90deg, #10b981, #0d9488); color: #fff; font-weight: 700; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35); }
+
+    .theme-rose-op { background: #ffe4e6; color: #e11d48; border: 1px solid rgba(253, 164, 175, 0.5); font-weight: 700; }
+    html.dark .theme-rose-op { background: rgba(136, 19, 55, 0.65); color: #fb7185; border-color: rgba(159, 18, 57, 0.45); }
+    .theme-rose-eq { background: linear-gradient(90deg, #f43f5e, #db2777); color: #fff; font-weight: 700; box-shadow: 0 4px 12px rgba(244, 63, 94, 0.35); }
+
+    .theme-amber-op { background: #fef3c7; color: #b45309; border: 1px solid rgba(252, 211, 77, 0.5); font-weight: 700; }
+    html.dark .theme-amber-op { background: rgba(120, 53, 15, 0.65); color: #fbbf24; border-color: rgba(146, 64, 14, 0.45); }
+    .theme-amber-eq { background: linear-gradient(90deg, #f59e0b, #ea580c); color: #fff; font-weight: 700; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35); }
+
+    .theme-cyan-op { background: #cffafe; color: #0e7490; border: 1px solid rgba(103, 232, 249, 0.5); font-weight: 700; }
+    html.dark .theme-cyan-op { background: rgba(22, 78, 99, 0.65); color: #22d3ee; border-color: rgba(21, 94, 117, 0.45); }
+    .theme-cyan-eq { background: linear-gradient(90deg, #06b6d4, #2563eb); color: #fff; font-weight: 700; box-shadow: 0 4px 12px rgba(6, 182, 212, 0.35); }
+
+    .theme-violet-op { background: #ede9fe; color: #7c3aed; border: 1px solid rgba(196, 181, 253, 0.5); font-weight: 700; }
+    html.dark .theme-violet-op { background: rgba(76, 29, 149, 0.65); color: #a78bfa; border-color: rgba(91, 33, 182, 0.45); }
+    .theme-violet-eq { background: linear-gradient(90deg, #8b5cf6, #c026d3); color: #fff; font-weight: 700; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.35); }
+
+    .theme-fuchsia-op { background: #fae8ff; color: #c026d3; border: 1px solid rgba(240, 171, 252, 0.5); font-weight: 700; }
+    html.dark .theme-fuchsia-op { background: rgba(112, 26, 117, 0.65); color: #e879f9; border-color: rgba(134, 25, 143, 0.45); }
+    .theme-fuchsia-eq { background: linear-gradient(90deg, #d946ef, #e11d48); color: #fff; font-weight: 700; box-shadow: 0 4px 12px rgba(217, 70, 239, 0.35); }
+
+    .theme-orange-op { background: #ffedd5; color: #c2410c; border: 1px solid rgba(253, 186, 116, 0.5); font-weight: 700; }
+    html.dark .theme-orange-op { background: rgba(124, 45, 18, 0.65); color: #fb923c; border-color: rgba(154, 52, 18, 0.45); }
+    .theme-orange-eq { background: linear-gradient(90deg, #f97316, #dc2626); color: #fff; font-weight: 700; box-shadow: 0 4px 12px rgba(249, 115, 22, 0.35); }
+
+    .mini-digital-display {
+      background: rgba(241, 245, 249, 0.88);
+      border: 1px solid rgba(203, 213, 225, 0.65);
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+    }
+    html.dark .mini-digital-display {
+      background: rgba(2, 6, 23, 0.8);
+      border-color: rgba(30, 41, 59, 0.85);
+      box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.45);
+    }
+
+    #calcDisplayBox {
+      background: rgba(241, 245, 249, 0.85);
+      border: 1px solid rgba(203, 213, 225, 0.55);
+      box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.06);
+      position: relative;
+      overflow: hidden;
+    }
+    html.dark #calcDisplayBox {
+      background: rgba(2, 6, 23, 0.82);
+      border-color: rgba(30, 41, 59, 0.65);
+    }
+
+    .btn-press {
+      transition: transform 0.08s ease, background-color 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+    }
+    .btn-press:hover { filter: brightness(1.06); }
+    .btn-press:active, .btn-press.active-key { transform: scale(0.94); }
+
+    /* Scrollbars */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(156, 163, 175, 0.35); border-radius: 10px; }
+
+    .scientific-drawer {
+      transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out, margin 0.3s ease-in-out;
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+    }
+    .scientific-drawer.open {
+      max-height: 320px;
+      opacity: 1;
+      margin-bottom: 0.75rem;
+    }
+
+    canvas { touch-action: none; }
+    .resize-handle { cursor: ns-resize; touch-action: none; }
+
+    /* Sliders */
+    input[type=range].custom-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      background: transparent;
+    }
+    input[type=range].custom-slider::-webkit-slider-runnable-track {
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.32);
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
+    }
+    input[type=range].custom-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 15px;
+      width: 15px;
+      border-radius: 50%;
+      background: var(--accent-color, #6366f1);
+      border: 2px solid #ffffff;
+      margin-top: -4.5px;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+      transition: transform 0.12s ease;
+    }
+    input[type=range].custom-slider::-webkit-slider-thumb:hover { transform: scale(1.15); }
+
+    /* Estudio Color HSV */
+    .hsv-sat-val-box {
+      position: relative;
+      background:
+        linear-gradient(to top, #000, transparent),
+        linear-gradient(to right, #fff, hsl(var(--hsv-hue, 239), 100%, 50%));
+      touch-action: none;
+    }
+    .hsv-hue-strip {
+      position: relative;
+      background: linear-gradient(to right, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
+      touch-action: none;
+    }
+
+    /* Teclado de Piano */
+    .piano-rack {
+      position: relative;
+      background: #0f172a;
+      border: 1px solid rgba(51, 65, 85, 0.85);
+      border-radius: 1rem;
+      padding: 0.5rem;
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.45);
+      overflow-x: auto;
+      user-select: none;
+    }
+
+    .piano-bed {
+      position: relative;
+      height: 8.75rem;
+      width: 100%;
+    }
+    .piano-bed.two-octaves {
+      min-width: 560px;
+    }
+    .piano-bed.one-octave {
+      min-width: 310px;
+    }
+
+    .piano-whites-layer {
+      display: flex;
+      width: 100%;
+      height: 100%;
+      gap: 3px;
+    }
+
+    .piano-blacks-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 58%;
+      pointer-events: none;
+    }
+
+    .piano-key-white {
+      flex: 1;
+      background: linear-gradient(to bottom, #ffffff 0%, #f1f5f9 100%);
+      color: #1e293b;
+      border: 1px solid #cbd5e1;
+      border-radius: 0 0 9px 9px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.25), inset 0 -3px 0 #cbd5e1;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      padding-bottom: 0.45rem;
+      font-size: 10px;
+      font-weight: 700;
+      transition: background 0.07s, transform 0.05s, box-shadow 0.07s;
+    }
+    .piano-key-white:active, .piano-key-white.piano-active {
+      background: linear-gradient(to bottom, #e0e7ff 0%, #c7d2fe 100%);
+      transform: translateY(3px);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.3), inset 0 -1px 0 #818cf8;
+    }
+
+    .piano-key-black {
+      position: absolute;
+      top: 0;
+      height: 100%;
+      transform: translateX(-50%);
+      background: linear-gradient(to bottom, #1e293b 0%, #020617 100%);
+      color: #f8fafc;
+      border: 1px solid #0f172a;
+      border-radius: 0 0 6px 6px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.55), inset 0 -2px 0 #334155;
+      z-index: 10;
+      pointer-events: auto;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      padding-bottom: 0.35rem;
+      font-size: 8px;
+      font-weight: 700;
+      transition: background 0.07s, transform 0.05s, box-shadow 0.07s;
+    }
+    .piano-key-black:active, .piano-key-black.piano-active {
+      background: linear-gradient(to bottom, #4f46e5 0%, #312e81 100%);
+      transform: translateX(-50%) translateY(3px);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.6);
+    }
+
+    /* Animaciones de pulso */
+    @keyframes pulseBeat {
+      0%, 100% { transform: scale(1); opacity: 0.85; }
+      50% { transform: scale(1.25); opacity: 1; }
+    }
+    .beat-pulse {
+      animation: pulseBeat 0.16s ease-out;
+    }
+
+    /* Overlays */
+    #historyOverlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.96);
+      border-radius: 1.5rem;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.3s ease;
+      z-index: 30;
+    }
+    html.dark #historyOverlay {
+      background: rgba(15, 23, 42, 0.96);
+    }
+    .overlay-hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(1rem);
+    }
+    .overlay-visible {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body id="appBg" class="bg-aurora">
+
+  <!-- Contenedor Principal -->
+  <div id="mainContainer" class="glass-panel">
+
+    <!-- Barra Superior: Navegación + Estado Offline + Controles -->
+    <div class="flex justify-between items-center mb-3.5 gap-1.5">
+      <!-- Pestañas Principales -->
+      <div class="nav-pill-group flex space-x-1 p-1 rounded-2xl">
+        <button id="tabCalcBtn" type="button" class="nav-tab-active px-2.5 py-1.5 text-xs font-bold rounded-xl transition-all flex items-center space-x-1 shrink-0">
+          <svg class="svg-icon" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="16" y1="14" x2="16" y2="18"/><path d="M16 10h.01M12 10h.01M8 10h.01M12 14h.01M8 14h.01M12 18h.01M8 18h.01"/></svg>
+          <span>Calc</span>
+        </button>
+        <button id="tabGraphBtn" type="button" class="nav-tab-inactive px-2.5 py-1.5 text-xs font-bold rounded-xl transition-all flex items-center space-x-1 shrink-0">
+          <svg class="svg-icon" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          <span>Gráfica</span>
+        </button>
+        <button id="tabPianoBtn" type="button" class="nav-tab-inactive px-2.5 py-1.5 text-xs font-bold rounded-xl transition-all flex items-center space-x-1 shrink-0">
+          <svg class="svg-icon" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+          <span>Piano</span>
+        </button>
+      </div>
+
+      <!-- Controles Superiores y Estado Offline -->
+      <div class="flex items-center space-x-1 shrink-0">
+        <!-- Botón/Badge de Modo Sin Conexión (Offline / Caché) -->
+        <button id="offlineMenuBtn" type="button" class="ui-key ui-surface-btn h-8 px-2 rounded-xl text-[10px] font-bold flex items-center space-x-1 transition-all btn-press" title="Estado Sin Conexión y Respaldo Offline">
+          <span id="offlineDot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
+          <span id="offlineBadgeText" class="hidden sm:inline">Offline Listo</span>
+        </button>
+
+        <button id="fullscreenToggleBtn" type="button" class="ui-key ui-surface-btn w-8 h-8 rounded-xl flex items-center justify-center transition-all btn-press" title="Pantalla Completa">
+          <svg id="fullscreenIcon" class="svg-icon" viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+        </button>
+        <button id="themeToggleBtn" type="button" class="ui-key ui-surface-btn w-8 h-8 rounded-xl flex items-center justify-center transition-all btn-press" title="Modo Claro/Oscuro">
+          <svg id="themeIconSun" class="svg-icon text-amber-400" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          <svg id="themeIconMoon" class="svg-icon hidden" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+        <button id="soundMenuBtn" type="button" class="ui-key ui-surface-btn w-8 h-8 rounded-xl flex items-center justify-center transition-all btn-press" title="Estudio de Sonido Avanzado">
+          <svg id="soundIconOn" class="svg-icon" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+          <svg id="soundIconOff" class="svg-icon text-rose-500 hidden" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+        </button>
+        <button id="colorMenuBtn" type="button" class="ui-key ui-surface-btn w-8 h-8 rounded-xl flex items-center justify-center transition-all btn-press" title="Personalizar Apariencia">
+          <svg class="svg-icon" viewBox="0 0 24 24"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- PANEL DESPLEGABLE DE MODO SIN CONEXIÓN (OFFLINE / PWA / RESPALDO) -->
+    <div id="offlinePanel" class="hidden sub-card-panel glass-panel flex flex-col space-y-2.5 mb-4 p-3.5 rounded-2xl transition-all">
+      <div class="flex items-center justify-between pb-2" style="border-bottom: 1px solid rgba(148,163,184,0.25);">
+        <span class="text-xs font-bold flex items-center">
+          <svg class="svg-icon mr-1.5 text-emerald-500" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Centro Sin Conexión (100% Autónomo)
+        </span>
+        <span id="networkStatusPill" class="text-[10px] font-bold px-2 py-0.5 rounded-lg" style="background: rgba(16,185,129,0.2); color: #10b981;">En Línea</span>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2 text-[11px]">
+        <div class="mini-digital-display p-2 rounded-xl flex flex-col">
+          <span class="text-[9px] uppercase font-bold text-slate-400">Caché Offline Local</span>
+          <span id="cacheStatusLabel" class="font-bold text-emerald-500 mt-1">Verificando...</span>
+        </div>
+        <div class="mini-digital-display p-2 rounded-xl flex flex-col">
+          <span class="text-[9px] uppercase font-bold text-slate-400">Almacenamiento Local</span>
+          <span id="storageUsageLabel" class="font-bold text-indigo-500 dark:text-indigo-300 mt-1">Activo (0 KB)</span>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap gap-1.5">
+        <button id="forceCacheBtn" type="button" class="ui-key ui-surface-btn flex-1 py-2 px-2.5 rounded-xl text-[11px] font-bold btn-press flex items-center justify-center space-x-1">
+          <svg class="svg-icon text-emerald-500" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span>Forzar Caché Offline</span>
+        </button>
+        <button id="exportBackupBtn" type="button" class="ui-key ui-surface-btn py-2 px-2.5 rounded-xl text-[11px] font-bold btn-press flex items-center space-x-1" title="Exportar respaldo JSON">
+          <svg class="svg-icon text-indigo-500" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
+          <span>Exportar</span>
+        </button>
+        <label class="ui-key ui-surface-btn py-2 px-2.5 rounded-xl text-[11px] font-bold btn-press flex items-center space-x-1 cursor-pointer" title="Importar respaldo JSON">
+          <svg class="svg-icon text-amber-400" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          <span>Importar</span>
+          <input type="file" id="importBackupInput" accept=".json,application/json" class="hidden">
+        </label>
+      </div>
+      <div id="offlineFeedbackMsg" class="hidden text-[10px] font-bold text-center py-1 px-2 rounded-lg" style="background: rgba(99,102,241,0.18); color: #818cf8;"></div>
+    </div>
+
+    <!-- PANEL DESPLEGABLE DE ESTUDIO DE SONIDO AVANZADO -->
+    <div id="soundPanel" class="hidden sub-card-panel glass-panel flex flex-col space-y-3 mb-4 p-3.5 rounded-2xl transition-all">
+      <div class="flex items-center justify-between pb-2" style="border-bottom: 1px solid rgba(148,163,184,0.25);">
+        <span class="text-xs font-bold flex items-center">
+          <svg class="svg-icon mr-1.5 text-indigo-500" viewBox="0 0 24 24"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+          Estudio de Sonido y Sintetizador
+        </span>
+        <div class="flex items-center space-x-1.5">
+          <button id="testChordBtn" type="button" class="ui-key ui-surface-btn text-[11px] font-bold px-2.5 py-1 rounded-xl text-indigo-500 dark:text-indigo-300 btn-press flex items-center space-x-1">
+            <svg class="svg-icon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            <span>Probar</span>
+          </button>
+          <button id="muteQuickBtn" type="button" class="ui-key ui-surface-btn text-[11px] font-bold px-2.5 py-1 rounded-xl btn-press">
+            Silenciar
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2">
+        <div class="mini-digital-display flex items-center space-x-2 px-2.5 py-2 rounded-xl" title="Volumen General">
+          <span class="text-[10px] font-bold text-slate-400">VOL</span>
+          <input type="range" id="volumeSlider" min="0" max="100" value="70" class="custom-slider flex-1">
+          <span id="volumeValueLabel" class="text-[11px] font-bold w-9 text-right">70%</span>
+        </div>
+        <div class="mini-digital-display flex items-center space-x-2 px-2.5 py-2 rounded-xl" title="Afinación / Pitch">
+          <span class="text-[10px] font-bold text-slate-400">TONO</span>
+          <input type="range" id="pitchSlider" min="50" max="160" value="100" class="custom-slider flex-1">
+          <span id="pitchValueLabel" class="text-[11px] font-bold w-9 text-right">1.0x</span>
+        </div>
+        <div class="mini-digital-display flex items-center space-x-2 px-2.5 py-2 rounded-xl" title="Duración de Nota">
+          <span class="text-[10px] font-bold text-slate-400">COLA</span>
+          <input type="range" id="decaySlider" min="30" max="250" value="100" class="custom-slider flex-1">
+          <span id="decayValueLabel" class="text-[11px] font-bold w-9 text-right">1.0s</span>
+        </div>
+        <div class="mini-digital-display flex items-center space-x-2 px-2.5 py-2 rounded-xl" title="Riqueza Armónica">
+          <span class="text-[10px] font-bold text-slate-400">ARM</span>
+          <input type="range" id="harmonySlider" min="0" max="100" value="40" class="custom-slider flex-1">
+          <span id="harmonyValueLabel" class="text-[11px] font-bold w-9 text-right">40%</span>
+        </div>
+      </div>
+
+      <div>
+        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 block">Instrumento / Timbre Base</span>
+        <div class="grid grid-cols-4 gap-1.5">
+          <button type="button" class="sound-pack-opt ui-key py-2 px-1.5 rounded-xl text-[11px] font-bold btn-press truncate" data-pack="crystal">Cristal</button>
+          <button type="button" class="sound-pack-opt ui-key py-2 px-1.5 rounded-xl text-[11px] font-bold btn-press truncate" data-pack="marimba">Marimba</button>
+          <button type="button" class="sound-pack-opt ui-key py-2 px-1.5 rounded-xl text-[11px] font-bold btn-press truncate" data-pack="piano">Piano</button>
+          <button type="button" class="sound-pack-opt ui-key py-2 px-1.5 rounded-xl text-[11px] font-bold btn-press truncate" data-pack="mechanical">Mecánico</button>
+          <button type="button" class="sound-pack-opt ui-key py-2 px-1.5 rounded-xl text-[11px] font-bold btn-press truncate" data-pack="retro">8-Bit</button>
+          <button type="button" class="sound-pack-opt ui-key py-2 px-1.5 rounded-xl text-[11px] font-bold btn-press truncate" data-pack="bubble">Burbuja</button>
+          <button type="button" class="sound-pack-opt ui-key py-2 px-1.5 rounded-xl text-[11px] font-bold btn-press truncate" data-pack="laser">Láser</button>
+          <button type="button" class="sound-pack-opt ui-key py-2 px-1.5 rounded-xl text-[11px] font-bold btn-press truncate" data-pack="zen">Zen</button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2 pt-1" style="border-top: 1px solid rgba(148,163,184,0.25);">
+        <button id="echoToggleBtn" type="button" class="ui-key ui-surface-btn flex items-center justify-between px-3 py-2 rounded-xl text-[11px] font-bold btn-press">
+          <span>Eco Espacial</span>
+          <span id="echoStatusBadge" class="text-[10px] px-1.5 py-0.5 rounded-lg" style="background: rgba(148,163,184,0.25);">OFF</span>
+        </button>
+        <button id="hapticToggleBtn" type="button" class="ui-key ui-surface-btn flex items-center justify-between px-3 py-2 rounded-xl text-[11px] font-bold btn-press">
+          <span>Vibración</span>
+          <span id="hapticStatusBadge" class="text-[10px] px-1.5 py-0.5 rounded-lg" style="background: rgba(16,185,129,0.2); color: #10b981;">ON</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- MENÚ DESPLEGABLE DE PERSONALIZACIÓN VISUAL -->
+    <div id="colorPalette" class="hidden sub-card-panel glass-panel flex flex-col space-y-3 mb-4 p-3.5 rounded-2xl transition-all">
+      <div class="flex justify-between items-center pb-2 gap-1" style="border-bottom: 1px solid rgba(148,163,184,0.25);">
+        <div class="nav-pill-group flex space-x-1 p-1 rounded-xl">
+          <button type="button" class="custom-tab-btn nav-tab-active px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all" data-customtab="themes">Temas</button>
+          <button type="button" class="custom-tab-btn nav-tab-inactive px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all" data-customtab="customcolors">Estudio Color</button>
+          <button type="button" class="custom-tab-btn nav-tab-inactive px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all" data-customtab="style">Estilo</button>
+        </div>
+        <button id="resetAllCustomBtn" type="button" class="ui-key text-[10px] font-bold text-rose-500 px-2 py-1 rounded-xl btn-press" style="background: rgba(244,63,94,0.12);">
+          Reset
+        </button>
+      </div>
+
+      <!-- SUBPESTAÑA 1: TEMAS -->
+      <div id="panel-themes" class="space-y-3">
+        <div>
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 block">Paletas Maestras (1 Clic)</span>
+          <div class="grid grid-cols-4 gap-1.5">
+            <button type="button" class="preset-palette-btn ui-key ui-surface-btn py-1.5 px-2 rounded-xl text-[10px] font-bold flex items-center justify-between btn-press" data-preset="neon">
+              <span>Neón</span><span class="w-2 h-2 rounded-full" style="background:#e879f9;"></span>
+            </button>
+            <button type="button" class="preset-palette-btn ui-key ui-surface-btn py-1.5 px-2 rounded-xl text-[10px] font-bold flex items-center justify-between btn-press" data-preset="obsidian">
+              <span>Obsidiana</span><span class="w-2 h-2 rounded-full" style="background:#f59e0b;"></span>
+            </button>
+            <button type="button" class="preset-palette-btn ui-key ui-surface-btn py-1.5 px-2 rounded-xl text-[10px] font-bold flex items-center justify-between btn-press" data-preset="pastel">
+              <span>Pastel</span><span class="w-2 h-2 rounded-full" style="background:#f472b6;"></span>
+            </button>
+            <button type="button" class="preset-palette-btn ui-key ui-surface-btn py-1.5 px-2 rounded-xl text-[10px] font-bold flex items-center justify-between btn-press" data-preset="emerald">
+              <span>Esmeralda</span><span class="w-2 h-2 rounded-full" style="background:#10b981;"></span>
+            </button>
+            <button type="button" class="preset-palette-btn ui-key ui-surface-btn py-1.5 px-2 rounded-xl text-[10px] font-bold flex items-center justify-between btn-press" data-preset="solar">
+              <span>Solar</span><span class="w-2 h-2 rounded-full" style="background:#f97316;"></span>
+            </button>
+            <button type="button" class="preset-palette-btn ui-key ui-surface-btn py-1.5 px-2 rounded-xl text-[10px] font-bold flex items-center justify-between btn-press" data-preset="cyberpunk">
+              <span>Cyber</span><span class="w-2 h-2 rounded-full" style="background:#06b6d4;"></span>
+            </button>
+            <button type="button" class="preset-palette-btn ui-key ui-surface-btn py-1.5 px-2 rounded-xl text-[10px] font-bold flex items-center justify-between btn-press" data-preset="arctic">
+              <span>Ártico</span><span class="w-2 h-2 rounded-full" style="background:#0284c7;"></span>
+            </button>
+            <button type="button" class="preset-palette-btn ui-key ui-surface-btn py-1.5 px-2 rounded-xl text-[10px] font-bold flex items-center justify-between btn-press" data-preset="crimson">
+              <span>Carmesí</span><span class="w-2 h-2 rounded-full" style="background:#e11d48;"></span>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 block">Fondo Ambiental</span>
+          <div class="grid grid-cols-8 gap-1.5">
+            <button type="button" class="bg-opt h-6 rounded-xl btn-press" style="background: linear-gradient(135deg, #a5b4fc, #f9a8d4);" data-bg="aurora" title="Aurora"></button>
+            <button type="button" class="bg-opt h-6 rounded-xl btn-press" style="background: linear-gradient(135deg, #c026d3, #06b6d4);" data-bg="cyberpunk" title="Cyberpunk"></button>
+            <button type="button" class="bg-opt h-6 rounded-xl btn-press" style="background: linear-gradient(135deg, #f1f5f9, #cbd5e1);" data-bg="minimal" title="Minimal"></button>
+            <button type="button" class="bg-opt h-6 rounded-xl btn-press" style="background: linear-gradient(135deg, #020617, #1e3a8a);" data-bg="midnight" title="Medianoche"></button>
+            <button type="button" class="bg-opt h-6 rounded-xl btn-press" style="background: linear-gradient(135deg, #fb7185, #fdba74);" data-bg="sunset" title="Atardecer"></button>
+            <button type="button" class="bg-opt h-6 rounded-xl btn-press" style="background: linear-gradient(135deg, #6ee7b7, #0d9488);" data-bg="forest" title="Bosque"></button>
+            <button type="button" class="bg-opt h-6 rounded-xl btn-press" style="background: linear-gradient(135deg, #7dd3fc, #2563eb);" data-bg="ocean" title="Océano"></button>
+            <button type="button" class="bg-opt h-6 rounded-xl btn-press" style="background: linear-gradient(135deg, #d8b4fe, #8b5cf6);" data-bg="lavender" title="Lavanda"></button>
+          </div>
+        </div>
+
+        <div>
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 block">Color de Acento Rápido</span>
+          <div class="flex justify-between items-center px-0.5">
+            <button type="button" class="color-opt w-6 h-6 rounded-full btn-press" style="background:#6366f1;" data-theme="indigo"></button>
+            <button type="button" class="color-opt w-6 h-6 rounded-full btn-press" style="background:#10b981;" data-theme="emerald"></button>
+            <button type="button" class="color-opt w-6 h-6 rounded-full btn-press" style="background:#f43f5e;" data-theme="rose"></button>
+            <button type="button" class="color-opt w-6 h-6 rounded-full btn-press" style="background:#f59e0b;" data-theme="amber"></button>
+            <button type="button" class="color-opt w-6 h-6 rounded-full btn-press" style="background:#06b6d4;" data-theme="cyan"></button>
+            <button type="button" class="color-opt w-6 h-6 rounded-full btn-press" style="background:#8b5cf6;" data-theme="violet"></button>
+            <button type="button" class="color-opt w-6 h-6 rounded-full btn-press" style="background:#d946ef;" data-theme="fuchsia"></button>
+            <button type="button" class="color-opt w-6 h-6 rounded-full btn-press" style="background:#f97316;" data-theme="orange"></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUBPESTAÑA 2: ESTUDIO DE COLOR HSV -->
+      <div id="panel-customcolors" class="hidden space-y-2.5">
+        <div class="flex flex-wrap items-center justify-between gap-1.5">
+          <div class="flex items-center space-x-1.5">
+            <button id="randomHarmonyBtn" type="button" class="ui-key ui-surface-btn px-2.5 py-1 rounded-xl text-[10px] font-bold text-indigo-500 dark:text-indigo-300 btn-press">
+              Armonía Aleatoria
+            </button>
+            <button id="autoContrastToggleBtn" type="button" class="ui-key ui-surface-btn px-2.5 py-1 rounded-xl text-[10px] font-bold text-emerald-500 btn-press">
+              <span id="autoContrastLabel">Auto-Contraste: ON</span>
+            </button>
+          </div>
+          <span id="customColorBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-lg hidden" style="background: rgba(99,102,241,0.2); color: #818cf8;">Activo</span>
+        </div>
+
+        <div>
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1 block">1. Elemento a personalizar</span>
+          <div class="grid grid-cols-3 gap-1">
+            <button type="button" class="color-target-btn ui-key ui-surface-btn px-2 py-1.5 rounded-xl text-[10px] font-bold flex items-center justify-between btn-press" data-target="bg">
+              <span class="truncate">Fondo 1</span><span id="swatch-bg" class="w-2 h-2 rounded-full shrink-0"></span>
+            </button>
+            <button type="button" class="color-target-btn ui-key ui-surface-btn px-2 py-1.5 rounded-xl text-[10px] font-bold flex items-center justify-between btn-press" data-target="bg2">
+              <span class="truncate">Fondo 2</span><span id="swatch-bg2" class="w-2 h-2 rounded-full shrink-0"></span>
+            </button>
+            <button type="button" class="color-target-btn ui-key ui-surface-btn px-2 py-1.5 rounded-xl text-[10px] font-bold flex items-center justify-between btn-press" data-target="panel">
+              <span class="truncate">Panel Cristal</span><span id="swatch-panel" class="w-2 h-2 rounded-full shrink-0"></span>
+            </button>
+            <button type="button" class="color-target-btn ui-key ui-surface-btn px-2 py-1.5 rounded-xl text-[10px] font-bold flex items-center justify-between btn-press" data-target="display">
+              <span class="truncate">Pantalla</span><span id="swatch-display" class="w-2 h-2 rounded-full shrink-0"></span>
+            </button>
+            <button type="button" class="color-target-btn ui-key ui-surface-btn px-2 py-1.5 rounded-xl text-[10px] font-bold flex items-center justify-between btn-press" data-target="num">
+              <span class="truncate">Números</span><span id="swatch-num" class="w-2 h-2 rounded-full shrink-0"></span>
+            </button>
+            <button type="button" class="color-target-btn ui-key ui-surface-btn px-2 py-1.5 rounded-xl text-[10px] font-bold flex items-center justify-between btn-press" data-target="op">
+              <span class="truncate">Operadores</span><span id="swatch-op" class="w-2 h-2 rounded-full shrink-0"></span>
+            </button>
+            <button type="button" class="color-target-btn ui-key ui-surface-btn px-2 py-1.5 rounded-xl text-[10px] font-bold flex items-center justify-between btn-press" data-target="func">
+              <span class="truncate">Funciones</span><span id="swatch-func" class="w-2 h-2 rounded-full shrink-0"></span>
+            </button>
+            <button type="button" class="color-target-btn ui-key ui-surface-btn px-2 py-1.5 rounded-xl text-[10px] font-bold flex items-center justify-between btn-press" data-target="equals">
+              <span class="truncate">Botón Igual</span><span id="swatch-equals" class="w-2 h-2 rounded-full shrink-0"></span>
+            </button>
+            <button type="button" class="color-target-btn ui-key ui-surface-btn px-2 py-1.5 rounded-xl text-[10px] font-bold flex items-center justify-between btn-press" data-target="stroke">
+              <span class="truncate">Gráfica</span><span id="swatch-stroke" class="w-2 h-2 rounded-full shrink-0"></span>
+            </button>
+          </div>
+        </div>
+
+        <div class="soft-box p-2.5 rounded-2xl space-y-2">
+          <div class="flex justify-between items-center text-[10px]">
+            <span class="font-bold text-slate-500 dark:text-slate-400">2. Espectro (<span id="activeTargetName" class="text-indigo-500 dark:text-indigo-400">Botón Igual</span>)</span>
+          </div>
+          <div id="hsvSatValBox" class="hsv-sat-val-box w-full h-24 rounded-xl" style="cursor:crosshair;">
+            <div id="hsvCursor" style="width:14px;height:14px;border-radius:50%;border:2px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,0.5);pointer-events:none;position:absolute;transform:translate(-50%,-50%);left:70%;top:20%;"></div>
+          </div>
+          <div id="hsvHueStrip" class="hsv-hue-strip w-full h-3.5 rounded-full" style="cursor:ew-resize;">
+            <div id="hsvHueCursor" style="width:14px;height:14px;border-radius:50%;background:#fff;border:2px solid #0f172a;pointer-events:none;position:absolute;top:50%;transform:translate(-50%,-50%);left:66%;"></div>
+          </div>
+          <div class="flex items-center space-x-1.5">
+            <div class="mini-digital-display flex-1 flex items-center px-2.5 py-1.5 rounded-xl">
+              <span class="text-[11px] font-bold text-slate-400 mr-1">#</span>
+              <input type="text" id="hexCodeInput" maxlength="6" value="6366F1" class="w-full text-xs font-bold uppercase" style="background:transparent;border:none;outline:none;">
+              <button id="copyHexBtn" type="button" class="text-xs px-1 text-slate-400" title="Copiar HEX">Copiar</button>
+            </div>
+            <input type="color" id="nativeColorSync" value="#6366f1" class="w-8 h-8 rounded-xl cursor-pointer" style="border:none;background:transparent;">
+          </div>
+        </div>
+
+        <div class="soft-box flex items-center justify-between gap-2 p-2 rounded-xl text-[10px]">
+          <span class="font-bold">Degradado Fondo:</span>
+          <div class="flex items-center space-x-1">
+            <button type="button" class="grad-dir-btn px-2 py-0.5 rounded-lg font-bold" data-dir="135deg">↘</button>
+            <button type="button" class="grad-dir-btn px-2 py-0.5 rounded-lg font-bold" data-dir="180deg">↓</button>
+            <button type="button" class="grad-dir-btn px-2 py-0.5 rounded-lg font-bold" data-dir="90deg">→</button>
+            <button type="button" class="grad-dir-btn px-2 py-0.5 rounded-lg font-bold" data-dir="radial">◉</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUBPESTAÑA 3: ESTILO Y TIPOGRAFÍA -->
+      <div id="panel-style" class="hidden space-y-3">
+        <div>
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 block">Forma de Teclas y Controles</span>
+          <div class="nav-pill-group grid grid-cols-3 gap-1.5 p-1 rounded-2xl">
+            <button type="button" class="shape-opt nav-tab-active py-1.5 text-[11px] font-bold rounded-xl btn-press" data-shape="rounded-2xl">Suave</button>
+            <button type="button" class="shape-opt nav-tab-inactive py-1.5 text-[11px] font-bold rounded-xl btn-press" data-shape="rounded-full">Píldora</button>
+            <button type="button" class="shape-opt nav-tab-inactive py-1.5 text-[11px] font-bold rounded-xl btn-press" data-shape="rounded-md">Recto</button>
+          </div>
+        </div>
+
+        <div>
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 block">Tipografía Global (100% Local)</span>
+          <div class="nav-pill-group grid grid-cols-4 gap-1.5 p-1 rounded-2xl">
+            <button type="button" class="font-opt font-preview-sans nav-tab-active py-1.5 text-[11px] font-bold rounded-xl btn-press flex flex-col items-center" data-font="sans">
+              <span class="text-xs">Aa</span><span class="text-[9px]">Sans</span>
+            </button>
+            <button type="button" class="font-opt font-preview-mono nav-tab-inactive py-1.5 text-[11px] font-bold rounded-xl btn-press flex flex-col items-center" data-font="mono">
+              <span class="text-xs">01</span><span class="text-[9px]">Mono</span>
+            </button>
+            <button type="button" class="font-opt font-preview-serif nav-tab-inactive py-1.5 text-[11px] font-bold rounded-xl btn-press flex flex-col items-center" data-font="serif">
+              <span class="text-xs">ƒx</span><span class="text-[9px]">Serif</span>
+            </button>
+            <button type="button" class="font-opt font-preview-poppins nav-tab-inactive py-1.5 text-[11px] font-bold rounded-xl btn-press flex flex-col items-center" data-font="poppins">
+              <span class="text-xs">Pop</span><span class="text-[9px]">Modern</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="space-y-2 pt-2" style="border-top: 1px solid rgba(148,163,184,0.25);">
+          <div class="mini-digital-display px-3 py-2 rounded-xl space-y-1">
+            <div class="flex items-center justify-between text-[10px]">
+              <span class="font-bold uppercase tracking-wider text-slate-400">Opacidad Panel Cristal</span>
+              <span id="glassOpacityVal" class="font-bold">75%</span>
+            </div>
+            <input type="range" id="glassOpacitySlider" min="45" max="98" value="75" class="custom-slider w-full">
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div class="mini-digital-display px-2.5 py-2 rounded-xl space-y-1">
+              <div class="flex justify-between text-[10px] text-slate-400">
+                <span class="font-bold">Pantalla</span><span id="dispSizeVal" class="font-bold">36px</span>
+              </div>
+              <input type="range" id="displaySizeSlider" min="24" max="52" value="36" class="custom-slider w-full">
+            </div>
+            <div class="mini-digital-display px-2.5 py-2 rounded-xl space-y-1">
+              <div class="flex justify-between text-[10px] text-slate-400">
+                <span class="font-bold">Teclas</span><span id="btnSizeVal" class="font-bold">16px</span>
+              </div>
+              <input type="range" id="btnSizeSlider" min="13" max="22" value="16" class="custom-slider w-full">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================================
+         PESTAÑA 1: CALCULADORA
+         ====================================================================== -->
+    <div id="calculatorTab" class="block">
+      <div id="calcTopActions" class="flex justify-between items-center mb-3">
+        <button id="scientificToggleBtn" type="button" class="ui-key ui-surface-btn h-8 px-3 text-xs font-bold rounded-xl flex items-center justify-center transition-all btn-press">
+          <span>Científica</span>
+          <svg id="sciIcon" class="svg-icon ml-1.5" style="transition: transform 0.25s;" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <button id="historyToggleBtn" type="button" class="ui-key ui-surface-btn h-8 px-3 rounded-xl flex items-center justify-center space-x-1.5 transition-all btn-press">
+          <svg class="svg-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span class="text-xs font-bold">Historial</span>
+        </button>
+      </div>
+
+      <div id="calcDisplayBox" class="rounded-2xl p-4 mb-4 text-right flex flex-col justify-end min-h-[110px]">
+        <div class="flex justify-between items-center h-6 mb-1">
+          <span id="memoryIndicator" class="text-xs font-bold px-1.5 py-0.5 rounded" style="background: rgba(99,102,241,0.2); color: #818cf8; opacity: 0; transition: opacity 0.2s;">M</span>
+          <div id="expressionDisplay" class="text-xs sm:text-sm text-slate-400 font-medium whitespace-nowrap" style="overflow-x:auto;"></div>
+        </div>
+        <div id="mainDisplay" class="text-3xl font-bold tracking-tight whitespace-nowrap" style="overflow-x:auto;">0</div>
+      </div>
+
+      <div id="calcKeypadArea" class="flex flex-col">
+        <div id="scientificDrawer" class="scientific-drawer grid grid-cols-4 gap-2">
+          <button type="button" class="btn-calc btn-mem" data-action="mc">MC</button>
+          <button type="button" class="btn-calc btn-mem" data-action="mr">MR</button>
+          <button type="button" class="btn-calc btn-mem" data-action="m-add">M+</button>
+          <button type="button" class="btn-calc btn-mem" data-action="m-sub">M-</button>
+          <button type="button" class="btn-calc btn-sci" data-action="sin">sin</button>
+          <button type="button" class="btn-calc btn-sci" data-action="cos">cos</button>
+          <button type="button" class="btn-calc btn-sci" data-action="tan">tan</button>
+          <button type="button" class="btn-calc btn-sci" data-action="log">log</button>
+          <button type="button" class="btn-calc btn-sci" data-action="ln">ln</button>
+          <button type="button" class="btn-calc btn-sci" data-action="sqrt">√</button>
+          <button type="button" class="btn-calc btn-sci" data-action="pow">x²</button>
+          <button type="button" class="btn-calc btn-sci" data-action="pi">π</button>
+        </div>
+
+        <div id="calcMainGrid" class="grid grid-cols-4 gap-2.5">
+          <button type="button" class="btn-calc btn-func" data-action="clear">AC</button>
+          <button type="button" class="btn-calc btn-func" data-action="backspace" aria-label="Borrar">⌫</button>
+          <button type="button" class="btn-calc btn-func" data-action="percent">%</button>
+          <button type="button" class="btn-calc btn-op" data-action="divide">÷</button>
+          <button type="button" class="btn-calc btn-num" data-val="7">7</button>
+          <button type="button" class="btn-calc btn-num" data-val="8">8</button>
+          <button type="button" class="btn-calc btn-num" data-val="9">9</button>
+          <button type="button" class="btn-calc btn-op" data-action="multiply">×</button>
+          <button type="button" class="btn-calc btn-num" data-val="4">4</button>
+          <button type="button" class="btn-calc btn-num" data-val="5">5</button>
+          <button type="button" class="btn-calc btn-num" data-val="6">6</button>
+          <button type="button" class="btn-calc btn-op" data-action="subtract">-</button>
+          <button type="button" class="btn-calc btn-num" data-val="1">1</button>
+          <button type="button" class="btn-calc btn-num" data-val="2">2</button>
+          <button type="button" class="btn-calc btn-num" data-val="3">3</button>
+          <button type="button" class="btn-calc btn-op" data-action="add">+</button>
+          <button type="button" class="btn-calc btn-num" data-action="toggle-sign">±</button>
+          <button type="button" class="btn-calc btn-num" data-val="0">0</button>
+          <button type="button" class="btn-calc btn-num" data-val=".">.</button>
+          <button type="button" class="btn-calc btn-equals" data-action="equals">=</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================================
+         PESTAÑA 2: GRAFICADORA 2D
+         ====================================================================== -->
+    <div id="grapherTab" class="hidden">
+      <div class="flex flex-wrap justify-between items-center gap-2 mb-2.5">
+        <span class="text-xs font-bold flex items-center">
+          <svg class="svg-icon mr-1.5 text-indigo-500" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Plano Cartesiano
+        </span>
+        <div id="graphSizeControls" class="nav-pill-group flex items-center space-x-1 p-1 rounded-xl">
+          <button type="button" class="size-preset nav-tab-inactive px-2 py-1 text-[10px] font-bold rounded-lg" data-height="200">S</button>
+          <button type="button" class="size-preset nav-tab-active px-2 py-1 text-[10px] font-bold rounded-lg" data-height="280">M</button>
+          <button type="button" class="size-preset nav-tab-inactive px-2 py-1 text-[10px] font-bold rounded-lg" data-height="400">L</button>
+          <button id="expandWidthBtn" type="button" class="nav-tab-inactive px-2 py-1 text-[10px] font-bold rounded-lg" title="Expandir Ancho">↔</button>
+        </div>
+      </div>
+
+      <div class="mb-2.5">
+        <div class="flex space-x-2">
+          <div class="mini-digital-display flex-1 flex items-center rounded-xl overflow-hidden">
+            <span class="px-2.5 py-2 text-xs font-bold text-indigo-500 dark:text-indigo-400">f(x) =</span>
+            <input type="text" id="functionInput" value="sin(x) * 2" placeholder="ej: x^2 - 3" class="w-full px-2 py-2 text-sm font-semibold" style="background:transparent;border:none;outline:none;">
+            <button id="clearFuncBtn" type="button" class="px-2.5 text-slate-400 text-xs">✕</button>
+          </div>
+          <button id="plotBtn" type="button" class="btn-equals px-4 py-2 rounded-xl text-xs font-bold text-white btn-press">Graficar</button>
+        </div>
+
+        <div class="flex items-center space-x-1 py-1.5 mt-1" style="overflow-x:auto;">
+          <span class="text-[10px] font-semibold text-slate-400 mr-1 shrink-0">Insertar:</span>
+          <button type="button" class="math-insert ui-key ui-surface-btn px-2.5 py-1 text-xs font-bold rounded-xl btn-press shrink-0" data-insert="x">x</button>
+          <button type="button" class="math-insert ui-key ui-surface-btn px-2.5 py-1 text-xs font-bold rounded-xl btn-press shrink-0" data-insert="^2">x²</button>
+          <button type="button" class="math-insert ui-key ui-surface-btn px-2.5 py-1 text-xs font-bold rounded-xl btn-press shrink-0" data-insert="^">^</button>
+          <button type="button" class="math-insert ui-key ui-surface-btn px-2.5 py-1 text-xs font-bold rounded-xl btn-press shrink-0" data-insert="sin(">sin</button>
+          <button type="button" class="math-insert ui-key ui-surface-btn px-2.5 py-1 text-xs font-bold rounded-xl btn-press shrink-0" data-insert="cos(">cos</button>
+          <button type="button" class="math-insert ui-key ui-surface-btn px-2.5 py-1 text-xs font-bold rounded-xl btn-press shrink-0" data-insert="tan(">tan</button>
+          <button type="button" class="math-insert ui-key ui-surface-btn px-2.5 py-1 text-xs font-bold rounded-xl btn-press shrink-0" data-insert="sqrt(">√</button>
+          <button type="button" class="math-insert ui-key ui-surface-btn px-2.5 py-1 text-xs font-bold rounded-xl btn-press shrink-0" data-insert="abs(">|x|</button>
+          <button type="button" class="math-insert ui-key ui-surface-btn px-2.5 py-1 text-xs font-bold rounded-xl btn-press shrink-0" data-insert="pi">π</button>
+          <button type="button" class="math-insert ui-key ui-surface-btn px-2.5 py-1 text-xs font-bold rounded-xl btn-press shrink-0" data-insert="(">(</button>
+          <button type="button" class="math-insert ui-key ui-surface-btn px-2.5 py-1 text-xs font-bold rounded-xl btn-press shrink-0" data-insert=")">)</button>
+        </div>
+      </div>
+
+      <div id="canvasWrapper" class="rounded-2xl overflow-hidden mb-3 flex flex-col" style="position:relative; background:#020617; border:1px solid rgba(51,65,85,0.7);">
+        <div id="coordBadge" class="hidden text-[11px] px-2.5 py-1 rounded-lg text-white" style="position:absolute; top:10px; left:10px; z-index:10; background:rgba(15,23,42,0.88); border:1px solid rgba(71,85,105,0.7); pointer-events:none;">
+          x: <span id="coordX" class="font-bold text-indigo-400">0.00</span>, y: <span id="coordY" class="font-bold text-emerald-400">0.00</span>
+        </div>
+
+        <div class="flex flex-col space-y-1 p-1 rounded-xl" style="position:absolute; top:10px; right:10px; z-index:10; background:rgba(15,23,42,0.8); border:1px solid rgba(71,85,105,0.6);">
+          <button id="zoomInBtn" type="button" class="w-7 h-7 rounded-lg text-slate-200 font-bold btn-press">+</button>
+          <button id="zoomOutBtn" type="button" class="w-7 h-7 rounded-lg text-slate-200 font-bold btn-press">-</button>
+          <button id="resetViewBtn" type="button" class="w-7 h-7 rounded-lg text-slate-200 font-bold btn-press">◎</button>
+        </div>
+
+        <canvas id="graphCanvas" style="height: 280px; width: 100%; display: block; cursor: crosshair;"></canvas>
+
+        <div id="graphError" class="hidden text-white text-xs font-medium px-3 py-1.5 rounded-xl text-center" style="position:absolute; bottom:26px; left:12px; right:12px; background:rgba(239,68,68,0.92);">
+          Revisa la sintaxis de la función
+        </div>
+
+        <div id="resizeHandle" class="resize-handle w-full h-4 flex items-center justify-center" style="background:#0f172a; border-top:1px solid #1e293b;">
+          <div class="w-10 rounded-full" style="height:4px; background:#475569;"></div>
+        </div>
+      </div>
+
+      <div class="soft-box p-2.5 rounded-2xl">
+        <div class="flex items-center justify-between mb-1.5">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Ejemplos rápidos</span>
+          <span class="text-[10px] text-slate-400">Arrastra para mover</span>
+        </div>
+        <div class="grid grid-cols-4 gap-1.5 text-[11px]">
+          <button type="button" class="quick-func ui-key ui-surface-btn py-1.5 px-2 rounded-xl font-bold btn-press truncate" data-expr="sin(x) * 2">Onda</button>
+          <button type="button" class="quick-func ui-key ui-surface-btn py-1.5 px-2 rounded-xl font-bold btn-press truncate" data-expr="x^2 - 4">Parábola</button>
+          <button type="button" class="quick-func ui-key ui-surface-btn py-1.5 px-2 rounded-xl font-bold btn-press truncate" data-expr="x^3 - 3*x">Cúbica</button>
+          <button type="button" class="quick-func ui-key ui-surface-btn py-1.5 px-2 rounded-xl font-bold btn-press truncate" data-expr="cos(x)*x">Espiral</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================================
+         PESTAÑA 3: ESTUDIO DE PIANO PRO AVANZADO
+         ====================================================================== -->
+    <div id="pianoTab" class="hidden flex flex-col space-y-2.5">
+      <!-- Fila 1: Octavas, Rango (1/2 Oct), Sustain y Grabación -->
+      <div class="flex flex-wrap items-center justify-between gap-1.5">
+        <div class="flex items-center space-x-1">
+          <!-- Selector de Octava Base -->
+          <div class="nav-pill-group flex items-center space-x-1 px-1.5 py-1 rounded-xl text-[10px] font-bold">
+            <button id="octaveDownBtn" type="button" class="px-1.5 py-0.5 btn-press" title="Bajar Octava">-8va</button>
+            <span id="octaveDisplay" class="text-indigo-500 dark:text-indigo-400">Oct 4</span>
+            <button id="octaveUpBtn" type="button" class="px-1.5 py-0.5 btn-press" title="Subir Octava">+8va</button>
+          </div>
+
+          <!-- Rango 1 Octava vs 2 Octavas -->
+          <button id="pianoSpanBtn" type="button" class="ui-key ui-surface-btn px-2 py-1 text-[10px] font-bold rounded-xl btn-press" title="Alternar 1 o 2 Octavas">
+            1 Oct
+          </button>
+
+          <!-- Pedal de Sustain -->
+          <button id="sustainToggleBtn" type="button" class="ui-key ui-surface-btn px-2 py-1 text-[10px] font-bold rounded-xl btn-press" title="Pedal Sustain (Barra Espaciadora)">
+            Sustain: OFF
+          </button>
+        </div>
+
+        <div class="flex items-center space-x-1">
+          <button id="recordToggleBtn" type="button" class="ui-key ui-surface-btn px-2.5 py-1 text-[11px] font-bold rounded-xl btn-press flex items-center space-x-1">
+            <span id="recordDot" class="w-2 h-2 rounded-full" style="background:#f43f5e;"></span>
+            <span id="recordLabel">Grabar</span>
+          </button>
+          <button id="playRecordBtn" type="button" class="ui-key px-2.5 py-1 text-[11px] font-bold rounded-xl text-white btn-press" style="background:#6366f1;" disabled>
+            ▶ Tocar
+          </button>
+        </div>
+      </div>
+
+      <!-- Fila 2: Acordes Inteligentes + Metrónomo + Ritmo Sintetizado -->
+      <div class="soft-box p-2 rounded-2xl flex flex-col space-y-2">
+        <div class="flex flex-wrap items-center justify-between gap-1.5">
+          <!-- Modo Acordes Automáticos -->
+          <div class="flex items-center space-x-1">
+            <span class="text-[10px] font-bold text-slate-400">Acorde:</span>
+            <select id="chordModeSelect" class="ui-surface-btn px-2 py-1 rounded-xl text-[10px] font-bold" style="outline:none;">
+              <option value="single">Nota Sola</option>
+              <option value="major">Mayor (1-3-5)</option>
+              <option value="minor">Menor (1-3b-5)</option>
+              <option value="seventh">Séptima (1-3-5-7b)</option>
+              <option value="octave">Octava (1-8)</option>
+            </select>
+          </div>
+
+          <!-- Metrónomo con BPM y LED -->
+          <div class="flex items-center space-x-1">
+            <span id="metronomeLed" class="w-2 h-2 rounded-full" style="background:#64748b;"></span>
+            <button id="metronomeToggleBtn" type="button" class="ui-key ui-surface-btn px-2 py-1 rounded-xl text-[10px] font-bold btn-press">
+              Metrónomo
+            </button>
+            <button id="bpmDownBtn" type="button" class="ui-surface-btn w-6 h-6 rounded-lg text-[10px] font-bold btn-press">-</button>
+            <span id="bpmLabel" class="text-[10px] font-bold text-indigo-500 dark:text-indigo-300" style="min-width:44px; text-align:center;">110 BPM</span>
+            <button id="bpmUpBtn" type="button" class="ui-surface-btn w-6 h-6 rounded-lg text-[10px] font-bold btn-press">+</button>
+          </div>
+        </div>
+
+        <!-- Acompañamiento Rítmico (Drum Loop) + Visualizador de Onda en Tiempo Real -->
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center space-x-1 shrink-0">
+            <span class="text-[10px] font-bold text-slate-400">Ritmo:</span>
+            <select id="drumPatternSelect" class="ui-surface-btn px-2 py-1 rounded-xl text-[10px] font-bold" style="outline:none;">
+              <option value="off">Sin Ritmo</option>
+              <option value="pop">Pop / Rock</option>
+              <option value="lofi">Lo-Fi Chill</option>
+              <option value="waltz">Vals 3/4</option>
+              <option value="electro">Electrónico</option>
+            </select>
+          </div>
+
+          <!-- Osciloscopio / Espectro Web Audio API -->
+          <div class="flex-1 rounded-xl overflow-hidden" style="height:26px; background:#020617; border:1px solid rgba(51,65,85,0.75);">
+            <canvas id="pianoScopeCanvas" style="width:100%; height:26px; display:block;"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pantalla Digital / Secuenciador + Biblioteca Clásica + Velocidad/Loop -->
+      <div class="mini-digital-display p-2.5 rounded-2xl flex flex-col space-y-1.5">
+        <div class="flex flex-wrap justify-between items-center gap-1 text-[10px] text-slate-400">
+          <span class="font-bold uppercase tracking-wider">
+            <span id="noteCountBadge">0</span> notas • <span id="activeInstBadge" class="text-indigo-500 dark:text-indigo-400">Piano</span>
+          </span>
+          <div class="flex items-center space-x-1.5">
+            <!-- Selector de Melodías Clásicas Predefinidas -->
+            <select id="presetMelodySelect" class="ui-surface-btn px-1.5 py-0.5 rounded-lg text-[10px] font-bold" style="outline:none;">
+              <option value="">Melodías Clásicas...</option>
+              <option value="demo">Arpegio Demo</option>
+              <option value="ode">Oda a la Alegría</option>
+              <option value="twinkle">Estrellita</option>
+              <option value="elise">Para Elisa (Intro)</option>
+              <option value="pentatonic">Escala Pentatónica</option>
+            </select>
+
+            <button id="playbackSpeedBtn" type="button" class="ui-surface-btn px-1.5 py-0.5 rounded-lg text-[10px] font-bold btn-press" title="Velocidad de reproducción">
+              1.0x
+            </button>
+
+            <button id="loopToggleBtn" type="button" class="ui-surface-btn px-1.5 py-0.5 rounded-lg text-[10px] font-bold btn-press" title="Repetir en bucle">
+              Loop: OFF
+            </button>
+
+            <button id="clearNotesBtn" type="button" class="text-rose-500 font-bold btn-press">Limpiar</button>
+          </div>
+        </div>
+
+        <div id="pianoLogDisplay" class="text-xs font-bold text-indigo-500 dark:text-indigo-300 flex items-center flex-wrap gap-1 px-1" style="min-height:32px; max-height:52px; overflow-y:auto;">
+          <span class="text-slate-400 italic text-[11px]" style="font-weight:400;">Toca las teclas (A-K / Z-M), activa acordes o carga una melodía clásica...</span>
+        </div>
+      </div>
+
+      <!-- Teclado de Piano Dinámico (1 o 2 Octavas) -->
+      <div class="piano-rack">
+        <div id="pianoBedContainer" class="piano-bed one-octave">
+          <div id="pianoWhitesLayer" class="piano-whites-layer"></div>
+          <div id="pianoBlacksLayer" class="piano-blacks-layer"></div>
+        </div>
+      </div>
+
+      <!-- Guardar Melodía con Nombre Personalizado -->
+      <div class="flex space-x-1.5">
+        <input type="text" id="melodyNameInput" placeholder="Nombre de tu melodía..." class="mini-digital-display flex-1 px-3 py-2 text-xs rounded-xl font-semibold" style="outline:none;">
+        <button id="saveCompositionBtn" type="button" class="btn-equals px-3.5 py-2 rounded-xl text-white font-bold text-xs btn-press shrink-0">
+          Guardar
+        </button>
+      </div>
+
+      <!-- Lista de Melodías Guardadas -->
+      <div class="soft-box p-2.5 rounded-2xl space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Mis Melodías Guardadas</span>
+          <span id="savedCountLabel" class="text-[10px] font-bold text-indigo-500 dark:text-indigo-400">0</span>
+        </div>
+        <div id="savedCompositionsList" class="space-y-1.5" style="max-height:110px; overflow-y:auto;">
+          <div class="text-center text-[11px] text-slate-400 py-2">No hay melodías guardadas aún</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Historial Overlay de Calculadora -->
+    <div id="historyOverlay" class="overlay-hidden glass-panel">
+      <div>
+        <div class="flex justify-between items-center mb-4 pb-2" style="border-bottom: 1px solid rgba(148,163,184,0.25);">
+          <h3 class="font-bold flex items-center">Historial</h3>
+          <button id="closeHistoryBtn" type="button" class="text-slate-400 p-1 text-sm font-bold">✕</button>
+        </div>
+        <div id="historyList" class="space-y-2" style="max-height:300px; overflow-y:auto;">
+          <div class="text-center text-xs text-slate-400 py-8">No hay operaciones recientes</div>
+        </div>
+      </div>
+
+      <div class="pt-3 flex justify-between items-center" style="border-top: 1px solid rgba(148,163,184,0.25);">
+        <button id="clearHistoryBtn" type="button" class="text-xs text-rose-500 font-bold">Borrar Historial</button>
+        <span class="text-[10px] text-slate-400">Haz clic para reutilizar</span>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // =========================================================================
+    // 1. MODO SIN CONEXIÓN (PWA MANIFEST + SERVICE WORKER + CACHE API + BACKUP)
+    // =========================================================================
+    const OFFLINE_CACHE_NAME = 'calc-piano-studio-offline-v1';
+
+    function setupOfflineInfrastructure() {
+      // 1.1 Web App Manifest dinámico embebido (Data URI)
+      const manifestData = {
+        name: "Calculadora, Graficadora y Estudio Piano Pro",
+        short_name: "CalcPianoPro",
+        description: "Calculadora científica, graficadora 2D y estudio de piano sintetizado 100% sin conexión",
+        start_url: "./",
+        display: "standalone",
+        background_color: "#0f172a",
+        theme_color: "#6366f1",
+        icons: [
+          {
+            src: "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128"><rect width="128" height="128" rx="28" fill="#4f46e5"/><path d="M36 92V38l56-10v54" stroke="#fff" stroke-width="8" fill="none" stroke-linecap="round"/><circle cx="28" cy="92" r="12" fill="#fff"/><circle cx="84" cy="82" r="12" fill="#fff"/></svg>'),
+            sizes: "128x128",
+            type: "image/svg+xml"
+          }
+        ]
+      };
+      const manifestLink = document.getElementById('pwaManifestLink');
+      if (manifestLink) {
+        manifestLink.href = 'data:application/manifest+json;charset=utf-8,' + encodeURIComponent(JSON.stringify(manifestData));
+      }
+
+      // 1.2 Registro de Service Worker dinámico mediante Blob
+      if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.protocol === 'http:')) {
+        const swCode = `
+          const CACHE_NAME = '${OFFLINE_CACHE_NAME}';
+          self.addEventListener('install', (event) => {
+            self.skipWaiting();
+            event.waitUntil(
+              caches.open(CACHE_NAME).then((cache) => cache.addAll(['./']).catch(() => {}))
+            );
+          });
+          self.addEventListener('activate', (event) => {
+            event.waitUntil(self.clients.claim());
+          });
+          self.addEventListener('fetch', (event) => {
+            if (event.request.method !== 'GET') return;
+            event.respondWith(
+              caches.match(event.request).then((cached) => {
+                return cached || fetch(event.request).then((response) => {
+                  const copy = response.clone();
+                  caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy)).catch(() => {});
+                  return response;
+                }).catch(() => cached || caches.match('./'));
+              })
+            );
+          });
+        `;
+        try {
+          const blob = new Blob([swCode], { type: 'application/javascript' });
+          const swUrl = URL.createObjectURL(blob);
+          navigator.serviceWorker.register(swUrl).catch(() => {});
+        } catch (e) {}
+      }
+
+      // 1.3 Pre-cachear documento actual en Cache Storage directamente
+      cacheCurrentDocumentOffline(true);
+    }
+
+    async function cacheCurrentDocumentOffline(silent = false) {
+      const cacheLabel = document.getElementById('cacheStatusLabel');
+      try {
+        if ('caches' in window) {
+          const cache = await caches.open(OFFLINE_CACHE_NAME);
+          const htmlContent = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+          const response = new Response(htmlContent, {
+            headers: { 'Content-Type': 'text/html; charset=utf-8' }
+          });
+          await cache.put('./', response.clone());
+          if (location.href && location.href.startsWith('http')) {
+            await cache.put(location.href, response);
+          }
+          if (cacheLabel) {
+            cacheLabel.textContent = 'Guardado en Caché ✓';
+            cacheLabel.style.color = '#10b981';
+          }
+          if (!silent) showOfflineFeedback('Instantánea completa guardada para uso 100% sin internet.');
+        } else {
+          if (cacheLabel) cacheLabel.textContent = 'Autónomo (Memoria Local)';
+        }
+      } catch (e) {
+        if (cacheLabel) cacheLabel.textContent = 'Autónomo (Sin Red Listo)';
+      }
+      updateStorageUsageUI();
+    }
+
+    function updateNetworkUI() {
+      const online = navigator.onLine;
+      const dot = document.getElementById('offlineDot');
+      const badgeText = document.getElementById('offlineBadgeText');
+      const pill = document.getElementById('networkStatusPill');
+
+      if (online) {
+        if (dot) dot.style.background = '#10b981';
+        if (badgeText) badgeText.textContent = 'Offline Listo';
+        if (pill) {
+          pill.textContent = 'En Línea (Caché Activa)';
+          pill.style.background = 'rgba(16,185,129,0.2)';
+          pill.style.color = '#10b981';
+        }
+      } else {
+        if (dot) dot.style.background = '#f59e0b';
+        if (badgeText) badgeText.textContent = 'Sin Red (Offline)';
+        if (pill) {
+          pill.textContent = 'Modo Sin Conexión Activo';
+          pill.style.background = 'rgba(245,158,11,0.22)';
+          pill.style.color = '#fbbf24';
+        }
+      }
+      updateStorageUsageUI();
+    }
+
+    function updateStorageUsageUI() {
+      const el = document.getElementById('storageUsageLabel');
+      if (!el) return;
+      try {
+        let totalChars = 0;
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          totalChars += (k.length + (localStorage.getItem(k) || '').length);
+        }
+        const kb = (totalChars / 1024).toFixed(1);
+        el.textContent = `Activo (${kb} KB)`;
+      } catch (e) {
+        el.textContent = 'Activo en Sesión';
+      }
+    }
+
+    function showOfflineFeedback(msg) {
+      const box = document.getElementById('offlineFeedbackMsg');
+      if (!box) return;
+      box.textContent = msg;
+      box.classList.remove('hidden');
+      setTimeout(() => box.classList.add('hidden'), 3200);
+    }
+
+    window.addEventListener('online', updateNetworkUI);
+    window.addEventListener('offline', updateNetworkUI);
+
+    // =========================================================================
+    // 2. CONFIGURACIÓN Y ESTADO GLOBAL (COMPATIBLE CON localStorage EXISTENTE)
+    // =========================================================================
+    const defaultSettings = {
+      bgKey: 'aurora',
+      themeKey: 'indigo',
+      btnShape: 'rounded-2xl',
+      fontType: 'sans',
+      glassOpacity: 75,
+      displayFontSize: 36,
+      btnFontSize: 16,
+      useCustomColors: false,
+      autoContrast: true,
+      gradientDir: '135deg',
+      customColors: {
+        bg: '#0f172a',
+        bg2: '#1e1b4b',
+        panel: '#0f172a',
+        display: '#020617',
+        num: '#1e293b',
+        op: '#312e81',
+        func: '#334155',
+        equals: '#6366f1',
+        stroke: '#6366f1'
+      },
+      volume: 0.7,
+      pitch: 1.0,
+      decay: 1.0,
+      harmony: 0.4,
+      soundPack: 'piano',
+      echo: false,
+      haptic: true,
+      darkMode: true
+    };
+
+    let settings = JSON.parse(JSON.stringify(defaultSettings));
+    try {
+      const saved = localStorage.getItem('calc_pro_settings_v5');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        settings = {
+          ...defaultSettings,
+          ...parsed,
+          customColors: { ...defaultSettings.customColors, ...(parsed.customColors || {}) }
+        };
+      }
+    } catch (e) {}
+
+    let strokeColor = '#6366f1';
+    let previousVolume = settings.volume || 0.7;
+    let isFullscreenMode = false;
+    let isWideMode = false;
+    let activeColorTarget = 'equals';
+
+    // Estado Calculadora
+    let currentValue = '0';
+    let previousValue = null;
+    let currentOperation = null;
+    let shouldResetDisplay = false;
+    let history = [];
+    let memoryValue = 0;
+
+    // Estado Graficadora
+    let scale = 35;
+    let offsetX = 0;
+    let offsetY = 0;
+    let isDragging = false;
+    let startX = 0, startY = 0;
+    let hoverMouseX = null;
+    let compiledFunc = null;
+    let isResizingHeight = false;
+    let resizeStartY = 0;
+    let resizeStartHeight = 0;
+
+    // Estado Piano Pro Avanzado
+    let currentOctave = 4;
+    let pianoOctaveSpan = 1; // 1 o 2 octavas
+    let sustainActive = false;
+    let chordMode = 'single'; // single, major, minor, seventh, octave
+    let bpm = 110;
+    let metronomeRunning = false;
+    let metronomeTimer = null;
+    let metronomeBeat = 0;
+    let drumPattern = 'off';
+    let playbackSpeed = 1.0;
+    let loopPlayback = false;
+    let activePlaybackTimeouts = [];
+    let isPlayingSequence = false;
+
+    let isRecording = false;
+    let recordStartTime = 0;
+    let currentRecording = [];
+    let savedCompositions = [];
+    try {
+      const savedComps = localStorage.getItem('piano_compositions_v2');
+      if (savedComps) savedCompositions = JSON.parse(savedComps);
+    } catch (e) {}
+
+    // Motor Web Audio API con AnalyserNode para osciloscopio en tiempo real
+    let audioCtx = null;
+    let analyserNode = null;
+    let masterGainNode = null;
+
+    function getAudioCtx() {
+      if (!audioCtx) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (AC) {
+          audioCtx = new AC();
+          analyserNode = audioCtx.createAnalyser();
+          analyserNode.fftSize = 256;
+          masterGainNode = audioCtx.createGain();
+          masterGainNode.gain.value = 1.0;
+          masterGainNode.connect(analyserNode);
+          analyserNode.connect(audioCtx.destination);
+        }
+      }
+      return audioCtx;
+    }
+
+    function saveSettings() {
+      try {
+        localStorage.setItem('calc_pro_settings_v5', JSON.stringify(settings));
+        updateStorageUsageUI();
+      } catch (e) {}
+    }
+
+    // =========================================================================
+    // 3. UTILIDADES DE COLOR Y TEMAS
+    // =========================================================================
+    function normalizeHex(hex) {
+      let clean = (hex || '').replace(/[^0-9A-Fa-f]/g, '');
+      if (clean.length === 3) clean = clean.split('').map(c => c + c).join('');
+      if (clean.length !== 6) return null;
+      return '#' + clean.toLowerCase();
+    }
+
+    function hexToRgb(hex) {
+      const norm = normalizeHex(hex) || '#0f172a';
+      const clean = norm.replace('#', '');
+      return {
+        r: parseInt(clean.substring(0, 2), 16),
+        g: parseInt(clean.substring(2, 4), 16),
+        b: parseInt(clean.substring(4, 6), 16)
+      };
+    }
+
+    function hexToRgba(hex, alpha) {
+      const { r, g, b } = hexToRgb(hex);
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    function getContrastTextColor(hex) {
+      if (!settings.autoContrast) return '#ffffff';
+      const { r, g, b } = hexToRgb(hex);
+      const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+      return luminance > 0.58 ? '#0f172a' : '#f8fafc';
+    }
+
+    function getSubtleTextColor(hex) {
+      const { r, g, b } = hexToRgb(hex);
+      const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+      return luminance > 0.58 ? '#475569' : '#94a3b8';
+    }
+
+    function hexToHsv(hex) {
+      let { r, g, b } = hexToRgb(hex);
+      r /= 255; g /= 255; b /= 255;
+      const max = Math.max(r, g, b), min = Math.min(r, g, b);
+      let h = 0, s = 0, v = max;
+      const d = max - min;
+      s = max === 0 ? 0 : d / max;
+      if (max !== min) {
+        switch (max) {
+          case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+          case g: h = (b - r) / d + 2; break;
+          case b: h = (r - g) / d + 4; break;
+        }
+        h /= 6;
+      }
+      return { h: Math.round(h * 360), s: Math.round(s * 100), v: Math.round(v * 100) };
+    }
+
+    function hsvToHex(h, s, v) {
+      h = ((h % 360) + 360) % 360;
+      s = Math.max(0, Math.min(100, s)) / 100;
+      v = Math.max(0, Math.min(100, v)) / 100;
+      const c = v * s;
+      const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+      const m = v - c;
+      let r = 0, g = 0, b = 0;
+      if (h < 60) { r = c; g = x; b = 0; }
+      else if (h < 120) { r = x; g = c; b = 0; }
+      else if (h < 180) { r = 0; g = c; b = x; }
+      else if (h < 240) { r = 0; g = x; b = c; }
+      else if (h < 300) { r = x; g = 0; b = c; }
+      else { r = c; g = 0; b = x; }
+      const toHex = n => Math.round((n + m) * 255).toString(16).padStart(2, '0');
+      return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+    }
+
+    const masterPresets = {
+      neon: { darkMode: true, colors: { bg: '#090014', bg2: '#1a0033', panel: '#120326', display: '#070112', num: '#1f083d', op: '#4c1d95', func: '#2e1065', equals: '#e879f9', stroke: '#22d3ee' } },
+      obsidian: { darkMode: true, colors: { bg: '#09090b', bg2: '#18181b', panel: '#121215', display: '#050507', num: '#1f1f23', op: '#27272a', func: '#3f3f46', equals: '#f59e0b', stroke: '#fbbf24' } },
+      pastel: { darkMode: false, colors: { bg: '#fdf2f8', bg2: '#eef2ff', panel: '#ffffff', display: '#fce7f3', num: '#fff1f2', op: '#e0e7ff', func: '#f3e8ff', equals: '#f472b6', stroke: '#a855f7' } },
+      emerald: { darkMode: true, colors: { bg: '#022c22', bg2: '#064e3b', panel: '#042f2e', display: '#011c16', num: '#065f46', op: '#047857', func: '#115e59', equals: '#10b981', stroke: '#34d399' } },
+      solar: { darkMode: false, colors: { bg: '#fff7ed', bg2: '#fef3c7', panel: '#fffbeb', display: '#ffedd5', num: '#ffffff', op: '#fed7aa', func: '#fde68a', equals: '#f97316', stroke: '#ea580c' } },
+      cyberpunk: { darkMode: true, colors: { bg: '#050816', bg2: '#1e1b4b', panel: '#0f172a', display: '#020617', num: '#1e293b', op: '#0e7490', func: '#312e81', equals: '#06b6d4', stroke: '#f43f5e' } },
+      arctic: { darkMode: false, colors: { bg: '#e0f2fe', bg2: '#f0f9ff', panel: '#f8fafc', display: '#e2e8f0', num: '#ffffff', op: '#bae6fd', func: '#cbd5e1', equals: '#0284c7', stroke: '#0369a1' } },
+      crimson: { darkMode: true, colors: { bg: '#190409', bg2: '#3b0712', panel: '#22060d', display: '#120206', num: '#380a16', op: '#7f1d1d', func: '#4c0519', equals: '#e11d48', stroke: '#fb7185' } }
+    };
+
+    const targetLabels = {
+      bg: 'Fondo 1', bg2: 'Fondo 2', panel: 'Panel Cristal', display: 'Pantalla',
+      num: 'Números', op: 'Operadores', func: 'Funciones', equals: 'Botón Igual', stroke: 'Gráfica'
+    };
+
+    const themeStrokes = {
+      indigo: '#6366f1', emerald: '#10b981', rose: '#f43f5e', amber: '#f59e0b',
+      cyan: '#06b6d4', violet: '#8b5cf6', fuchsia: '#d946ef', orange: '#f97316'
+    };
+
+    const packNames = {
+      crystal: 'Cristal', marimba: 'Marimba', piano: 'Piano', mechanical: 'Mecánico',
+      retro: '8-Bit', bubble: 'Burbuja', laser: 'Láser', zen: 'Zen'
+    };
+
+    // Referencias DOM
+    const mainDisplay = document.getElementById('mainDisplay');
+    const expressionDisplay = document.getElementById('expressionDisplay');
+    const memoryIndicator = document.getElementById('memoryIndicator');
+    const calcDisplayBox = document.getElementById('calcDisplayBox');
+    const mainContainer = document.getElementById('mainContainer');
+    const offlinePanel = document.getElementById('offlinePanel');
+    const soundPanel = document.getElementById('soundPanel');
+    const colorPalette = document.getElementById('colorPalette');
+    const calculatorTab = document.getElementById('calculatorTab');
+    const grapherTab = document.getElementById('grapherTab');
+    const pianoTab = document.getElementById('pianoTab');
+
+    function getBaseBtnClasses() {
+      return `calc-key-surface h-12 ${settings.btnShape} font-semibold flex items-center justify-center`;
+    }
+
+    function updateSoundPackUI() {
+      const accent = settings.useCustomColors ? settings.customColors.equals : (themeStrokes[settings.themeKey] || '#6366f1');
+      const badge = document.getElementById('activeInstBadge');
+      if (badge) badge.textContent = packNames[settings.soundPack] || 'Piano';
+
+      document.querySelectorAll('.sound-pack-opt').forEach(btn => {
+        const isSelected = btn.getAttribute('data-pack') === settings.soundPack;
+        btn.className = `sound-pack-opt ui-key py-2 px-1.5 ${settings.btnShape} text-[11px] font-bold btn-press truncate ${isSelected ? '' : 'ui-surface-btn'}`;
+        if (isSelected) {
+          btn.style.backgroundColor = accent;
+          btn.style.color = getContrastTextColor(accent);
+        } else {
+          btn.style.backgroundColor = '';
+          btn.style.color = '';
+        }
+      });
+    }
+
+    function syncColorStudioUI() {
+      const currentHex = settings.customColors[activeColorTarget] || '#6366f1';
+      const hsv = hexToHsv(currentHex);
+
+      Object.keys(targetLabels).forEach(key => {
+        const swatch = document.getElementById(`swatch-${key}`);
+        if (swatch) swatch.style.backgroundColor = settings.customColors[key];
+      });
+
+      document.querySelectorAll('.color-target-btn').forEach(btn => {
+        const isTarget = btn.getAttribute('data-target') === activeColorTarget;
+        btn.style.border = isTarget ? '2px solid #6366f1' : '';
+      });
+
+      document.getElementById('activeTargetName').textContent = targetLabels[activeColorTarget] || activeColorTarget;
+      const hsvSatValBox = document.getElementById('hsvSatValBox');
+      hsvSatValBox.style.setProperty('--hsv-hue', hsv.h);
+      const hsvCursor = document.getElementById('hsvCursor');
+      hsvCursor.style.left = `${hsv.s}%`;
+      hsvCursor.style.top = `${100 - hsv.v}%`;
+      hsvCursor.style.backgroundColor = currentHex;
+      document.getElementById('hsvHueCursor').style.left = `${(hsv.h / 360) * 100}%`;
+
+      const hexCodeInput = document.getElementById('hexCodeInput');
+      if (document.activeElement !== hexCodeInput) {
+        hexCodeInput.value = currentHex.replace('#', '').toUpperCase();
+      }
+      document.getElementById('nativeColorSync').value = currentHex;
+
+      const autoLabel = document.getElementById('autoContrastLabel');
+      autoLabel.textContent = settings.autoContrast ? 'Auto-Contraste: ON' : 'Auto-Contraste: OFF';
+
+      document.querySelectorAll('.grad-dir-btn').forEach(btn => {
+        const active = btn.getAttribute('data-dir') === settings.gradientDir;
+        btn.style.backgroundColor = active ? '#6366f1' : 'rgba(148,163,184,0.25)';
+        btn.style.color = active ? '#ffffff' : '';
+      });
+    }
+
+    function formatNumber(numStr) {
+      if (numStr === 'Error') return 'Error';
+      if (numStr.endsWith('.')) return numStr;
+      const parts = numStr.split('.');
+      const integerPart = parseFloat(parts[0]).toLocaleString('es-ES');
+      if (isNaN(parseFloat(parts[0]))) return '0';
+      return parts.length > 1 ? `${integerPart}.${parts[1]}` : integerPart;
+    }
+
+    function updateDisplay() {
+      mainDisplay.textContent = formatNumber(currentValue);
+      const baseSize = settings.displayFontSize || 36;
+      const effectiveSize = currentValue.length > 10 ? Math.max(20, Math.round(baseSize * 0.68)) : baseSize;
+      mainDisplay.style.fontSize = `${effectiveSize}px`;
+      memoryIndicator.style.opacity = memoryValue !== 0 ? '1' : '0';
+    }
+
+    function applyAllAppearance() {
+      const appBg = document.getElementById('appBg');
+      const base = getBaseBtnClasses();
+      const alpha = settings.glassOpacity / 100;
+      const tKey = settings.themeKey || 'indigo';
+
+      document.documentElement.classList.toggle('dark', settings.darkMode);
+      document.getElementById('themeIconSun').classList.toggle('hidden', !settings.darkMode);
+      document.getElementById('themeIconMoon').classList.toggle('hidden', settings.darkMode);
+
+      const fontMap = {
+        sans: "var(--font-sans)",
+        mono: "var(--font-mono)",
+        serif: "var(--font-serif)",
+        poppins: "var(--font-modern)"
+      };
+      document.documentElement.style.setProperty('--app-font', fontMap[settings.fontType] || fontMap.sans);
+
+      const activeAccent = settings.useCustomColors ? settings.customColors.equals : (themeStrokes[tKey] || '#6366f1');
+      document.documentElement.style.setProperty('--accent-color', activeAccent);
+
+      if (settings.useCustomColors) {
+        const c = settings.customColors;
+        appBg.className = "";
+        appBg.style.background = settings.gradientDir === 'radial'
+          ? `radial-gradient(circle at center, ${c.bg2}, ${c.bg})`
+          : `linear-gradient(${settings.gradientDir}, ${c.bg}, ${c.bg2})`;
+
+        mainContainer.style.backgroundColor = hexToRgba(c.panel, alpha);
+        offlinePanel.style.backgroundColor = hexToRgba(c.panel, Math.min(0.95, alpha + 0.1));
+        soundPanel.style.backgroundColor = hexToRgba(c.panel, Math.min(0.95, alpha + 0.1));
+        colorPalette.style.backgroundColor = hexToRgba(c.panel, Math.min(0.95, alpha + 0.1));
+
+        calcDisplayBox.style.backgroundColor = hexToRgba(c.display, 0.88);
+        mainDisplay.style.color = getContrastTextColor(c.display);
+        expressionDisplay.style.color = getSubtleTextColor(c.display);
+
+        strokeColor = c.stroke;
+        document.getElementById('customColorBadge').classList.remove('hidden');
+      } else {
+        appBg.style.background = '';
+        appBg.className = `bg-${settings.bgKey || 'aurora'}`;
+        const panelRgba = settings.darkMode ? `rgba(15, 23, 42, ${alpha})` : `rgba(255, 255, 255, ${alpha})`;
+        const subPanelRgba = settings.darkMode ? `rgba(15, 23, 42, ${Math.min(0.94, alpha + 0.1)})` : `rgba(255, 255, 255, ${Math.min(0.94, alpha + 0.1)})`;
+        mainContainer.style.backgroundColor = panelRgba;
+        offlinePanel.style.backgroundColor = subPanelRgba;
+        soundPanel.style.backgroundColor = subPanelRgba;
+        colorPalette.style.backgroundColor = subPanelRgba;
+
+        calcDisplayBox.style.backgroundColor = '';
+        mainDisplay.style.color = '';
+        expressionDisplay.style.color = '';
+
+        strokeColor = themeStrokes[tKey] || '#6366f1';
+        document.getElementById('customColorBadge').classList.add('hidden');
+      }
+
+      document.querySelectorAll('.btn-num').forEach(b => {
+        b.className = `btn-calc btn-num ${base} ${settings.useCustomColors ? '' : 'key-num-default'}`;
+        b.style.backgroundColor = settings.useCustomColors ? settings.customColors.num : '';
+        b.style.color = settings.useCustomColors ? getContrastTextColor(settings.customColors.num) : '';
+        b.style.fontSize = `${settings.btnFontSize}px`;
+      });
+
+      document.querySelectorAll('.btn-func').forEach(b => {
+        b.className = `btn-calc btn-func ${base} ${settings.useCustomColors ? '' : 'key-func-default'}`;
+        b.style.backgroundColor = settings.useCustomColors ? settings.customColors.func : '';
+        b.style.color = settings.useCustomColors ? getContrastTextColor(settings.customColors.func) : '';
+        b.style.fontSize = `${settings.btnFontSize}px`;
+      });
+
+      document.querySelectorAll('.btn-op').forEach(b => {
+        b.className = `btn-calc btn-op ${base} ${settings.useCustomColors ? 'font-bold' : `theme-${tKey}-op`}`;
+        b.style.backgroundColor = settings.useCustomColors ? settings.customColors.op : '';
+        b.style.color = settings.useCustomColors ? getContrastTextColor(settings.customColors.op) : '';
+        b.style.fontSize = `${settings.btnFontSize}px`;
+      });
+
+      document.querySelectorAll('.btn-sci').forEach(b => {
+        b.className = `btn-calc btn-sci ${base} h-10 ${settings.useCustomColors ? '' : 'key-func-default'}`;
+        b.style.backgroundColor = settings.useCustomColors ? settings.customColors.func : '';
+        b.style.color = settings.useCustomColors ? getContrastTextColor(settings.customColors.func) : '';
+        b.style.fontSize = `${Math.max(11, settings.btnFontSize - 2)}px`;
+      });
+
+      document.querySelectorAll('.btn-mem').forEach(b => {
+        b.className = `btn-calc btn-mem ${base} h-9 ${settings.useCustomColors ? '' : `theme-${tKey}-op`}`;
+        b.style.backgroundColor = settings.useCustomColors ? settings.customColors.op : '';
+        b.style.color = settings.useCustomColors ? getContrastTextColor(settings.customColors.op) : '';
+        b.style.fontSize = `${Math.max(10, settings.btnFontSize - 3)}px`;
+      });
+
+      document.querySelectorAll('.btn-equals').forEach(b => {
+        if (b.id === 'plotBtn' || b.id === 'saveCompositionBtn') {
+          b.className = `btn-equals px-3.5 py-2 ${settings.btnShape} text-xs font-bold text-white btn-press shrink-0 ${settings.useCustomColors ? '' : `theme-${tKey}-eq`}`;
+          b.style.backgroundColor = settings.useCustomColors ? settings.customColors.equals : '';
+          b.style.color = settings.useCustomColors ? getContrastTextColor(settings.customColors.equals) : '#ffffff';
+        } else {
+          b.className = `btn-calc btn-equals ${base} ${settings.useCustomColors ? 'font-bold' : `theme-${tKey}-eq`}`;
+          b.style.backgroundColor = settings.useCustomColors ? settings.customColors.equals : '';
+          b.style.color = settings.useCustomColors ? getContrastTextColor(settings.customColors.equals) : '#ffffff';
+          b.style.fontSize = `${settings.btnFontSize + 3}px`;
+        }
+      });
+
+      document.querySelectorAll('.ui-key').forEach(el => {
+        el.classList.remove('rounded-md', 'rounded-xl', 'rounded-2xl', 'rounded-full');
+        el.classList.add(settings.btnShape);
+      });
+
+      document.querySelectorAll('.color-opt').forEach(btn => {
+        const active = !settings.useCustomColors && btn.getAttribute('data-theme') === settings.themeKey;
+        btn.style.outline = active ? '2px solid #ffffff' : 'none';
+        btn.style.transform = active ? 'scale(1.15)' : 'scale(1)';
+      });
+
+      document.querySelectorAll('.shape-opt').forEach(btn => {
+        const active = btn.getAttribute('data-shape') === settings.btnShape;
+        btn.className = `shape-opt py-1.5 text-[11px] font-bold rounded-xl btn-press ${active ? 'nav-tab-active' : 'nav-tab-inactive'}`;
+      });
+
+      document.querySelectorAll('.font-opt').forEach(btn => {
+        const fType = btn.getAttribute('data-font');
+        const active = fType === settings.fontType;
+        btn.className = `font-opt font-preview-${fType} py-1.5 text-[11px] font-bold rounded-xl btn-press flex flex-col items-center ${active ? 'nav-tab-active' : 'nav-tab-inactive'}`;
+      });
+
+      document.getElementById('glassOpacitySlider').value = settings.glassOpacity;
+      document.getElementById('glassOpacityVal').textContent = `${settings.glassOpacity}%`;
+      document.getElementById('displaySizeSlider').value = settings.displayFontSize;
+      document.getElementById('dispSizeVal').textContent = `${settings.displayFontSize}px`;
+      document.getElementById('btnSizeSlider').value = settings.btnFontSize;
+      document.getElementById('btnSizeVal').textContent = `${settings.btnFontSize}px`;
+
+      syncColorStudioUI();
+      updateSoundPackUI();
+      updateDisplay();
+      if (!grapherTab.classList.contains('hidden')) drawGraph();
+      saveSettings();
+    }
+
+    // =========================================================================
+    // 4. MOTOR DE AUDIO SINTETIZADO (PIANO, PERCUSIÓN, METRÓNOMO Y ANALYSER)
+    // =========================================================================
+    const numNotes = {
+      '0': 523.25, '1': 587.33, '2': 659.25, '3': 783.99, '4': 880.00,
+      '5': 1046.50, '6': 1174.66, '7': 1318.51, '8': 1567.98, '9': 1760.00, '.': 987.77
+    };
+
+    function playToneRaw(freq, type, duration, gainPeak, delay = 0, slideTo = null) {
+      if (settings.volume <= 0) return;
+      try {
+        const ctxAudio = getAudioCtx();
+        if (!ctxAudio) return;
+        if (ctxAudio.state === 'suspended') ctxAudio.resume();
+        const now = ctxAudio.currentTime + delay;
+        const osc = ctxAudio.createOscillator();
+        const gain = ctxAudio.createGain();
+
+        const pitchMult = settings.pitch || 1.0;
+        const decayMult = settings.decay || 1.0;
+        const finalDuration = duration * decayMult;
+
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq * pitchMult, now);
+        if (slideTo) {
+          osc.frequency.exponentialRampToValueAtTime(slideTo * pitchMult, now + finalDuration);
+        }
+
+        const effectiveGain = gainPeak * settings.volume;
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.linearRampToValueAtTime(effectiveGain, now + 0.012);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + finalDuration);
+
+        osc.connect(gain);
+        gain.connect(masterGainNode || ctxAudio.destination);
+        osc.start(now);
+        osc.stop(now + finalDuration + 0.02);
+      } catch (e) {}
+    }
+
+    function playTone(freq, type, duration, gainPeak, delay = 0, slideTo = null) {
+      playToneRaw(freq, type, duration, gainPeak, delay, slideTo);
+      if (settings.harmony > 0.05) {
+        playToneRaw(freq * 2, 'sine', duration * 0.75, gainPeak * settings.harmony * 0.35, delay + 0.01, slideTo ? slideTo * 2 : null);
+      }
+      if (settings.echo) {
+        playToneRaw(freq, type, duration * 1.15, gainPeak * 0.35, delay + 0.14, slideTo);
+        playToneRaw(freq, type, duration * 1.25, gainPeak * 0.14, delay + 0.28, slideTo);
+      }
+    }
+
+    function playMusicalFreq(freq, packOverride = null, sustainMult = 1.0) {
+      if (settings.volume <= 0) return;
+      const pack = packOverride || settings.soundPack;
+      const durScale = sustainMult;
+
+      if (pack === 'crystal') {
+        playTone(freq, 'sine', 0.45 * durScale, 0.17);
+        playTone(freq * 2, 'sine', 0.25 * durScale, 0.06);
+      } else if (pack === 'marimba') {
+        playTone(freq, 'sine', 0.35 * durScale, 0.21);
+        playTone(freq * 4, 'sine', 0.06, 0.07);
+      } else if (pack === 'piano') {
+        playTone(freq, 'triangle', 0.65 * durScale, 0.21);
+        playTone(freq * 2, 'sine', 0.45 * durScale, 0.08);
+        playTone(freq * 3, 'sine', 0.25 * durScale, 0.03);
+      } else if (pack === 'mechanical') {
+        playTone(freq * 0.5, 'triangle', 0.14 * durScale, 0.22, 0, freq * 0.25);
+        playTone(freq * 2, 'square', 0.05, 0.06);
+      } else if (pack === 'retro') {
+        playTone(freq, 'square', 0.25 * durScale, 0.10);
+      } else if (pack === 'bubble') {
+        playTone(freq * 0.85, 'sine', 0.24 * durScale, 0.19, 0, freq * 1.45);
+      } else if (pack === 'laser') {
+        playTone(freq * 1.3, 'sawtooth', 0.22 * durScale, 0.11, 0, freq * 0.5);
+      } else if (pack === 'zen') {
+        playTone(freq, 'sine', 1.1 * durScale, 0.17);
+        playTone(freq * 2.756, 'sine', 0.6 * durScale, 0.05);
+      }
+    }
+
+    // Sintetizador de Percusión para Ritmos Offline
+    function playDrumHit(type) {
+      if (settings.volume <= 0) return;
+      const ctxAudio = getAudioCtx();
+      if (!ctxAudio) return;
+      if (ctxAudio.state === 'suspended') ctxAudio.resume();
+      const now = ctxAudio.currentTime;
+      const vol = settings.volume;
+
+      if (type === 'kick') {
+        const osc = ctxAudio.createOscillator();
+        const gain = ctxAudio.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(140, now);
+        osc.frequency.exponentialRampToValueAtTime(38, now + 0.14);
+        gain.gain.setValueAtTime(0.32 * vol, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+        osc.connect(gain);
+        gain.connect(masterGainNode || ctxAudio.destination);
+        osc.start(now);
+        osc.stop(now + 0.17);
+      } else if (type === 'snare') {
+        // Ruido blanco filtrado + golpe tonal
+        const bufferSize = ctxAudio.sampleRate * 0.12;
+        const buffer = ctxAudio.createBuffer(1, bufferSize, ctxAudio.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+        const noise = ctxAudio.createBufferSource();
+        noise.buffer = buffer;
+        const filter = ctxAudio.createBiquadFilter();
+        filter.type = 'highpass';
+        filter.frequency.value = 900;
+        const gain = ctxAudio.createGain();
+        gain.gain.setValueAtTime(0.22 * vol, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(masterGainNode || ctxAudio.destination);
+        noise.start(now);
+      } else if (type === 'hat') {
+        const bufferSize = ctxAudio.sampleRate * 0.045;
+        const buffer = ctxAudio.createBuffer(1, bufferSize, ctxAudio.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+        const noise = ctxAudio.createBufferSource();
+        noise.buffer = buffer;
+        const filter = ctxAudio.createBiquadFilter();
+        filter.type = 'highpass';
+        filter.frequency.value = 5500;
+        const gain = ctxAudio.createGain();
+        gain.gain.setValueAtTime(0.11 * vol, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.045);
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(masterGainNode || ctxAudio.destination);
+        noise.start(now);
+      } else if (type === 'click-high' || type === 'click-low') {
+        const osc = ctxAudio.createOscillator();
+        const gain = ctxAudio.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(type === 'click-high' ? 1200 : 850, now);
+        gain.gain.setValueAtTime(0.14 * vol, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
+        osc.connect(gain);
+        gain.connect(masterGainNode || ctxAudio.destination);
+        osc.start(now);
+        osc.stop(now + 0.04);
+      }
+    }
+
+    function playSound(category, keyVal = '5') {
+      if (settings.volume <= 0) return;
+      const pack = settings.soundPack;
+
+      if (pack === 'crystal') {
+        if (category === 'num') playTone(numNotes[keyVal] || 784, 'sine', 0.14, 0.12);
+        else if (category === 'op') playTone(440, 'triangle', 0.16, 0.14, 0, 554.37);
+        else if (category === 'clear') playTone(659.25, 'sine', 0.14, 0.12, 0, 329.63);
+        else if (category === 'equals') {
+          playTone(523.25, 'sine', 0.28, 0.11, 0);
+          playTone(659.25, 'sine', 0.28, 0.10, 0.04);
+          playTone(783.99, 'sine', 0.32, 0.10, 0.08);
+          playTone(1046.50, 'sine', 0.40, 0.09, 0.12);
+        } else playTone(880, 'sine', 0.08, 0.08);
+      } else if (pack === 'marimba') {
+        if (category === 'num') playTone((numNotes[keyVal] || 659) * 0.75, 'sine', 0.18, 0.18);
+        else if (category === 'equals') {
+          playTone(523.25, 'sine', 0.22, 0.16, 0);
+          playTone(783.99, 'sine', 0.25, 0.16, 0.06);
+          playTone(1046.50, 'sine', 0.35, 0.16, 0.12);
+        } else playTone(392, 'sine', 0.16, 0.16);
+      } else if (pack === 'piano') {
+        if (category === 'num') playTone((numNotes[keyVal] || 523.25) * 0.5, 'triangle', 0.32, 0.16);
+        else if (category === 'equals') {
+          playTone(261.63, 'triangle', 0.45, 0.15, 0);
+          playTone(329.63, 'triangle', 0.45, 0.13, 0.04);
+          playTone(392.00, 'triangle', 0.45, 0.13, 0.08);
+          playTone(523.25, 'triangle', 0.55, 0.14, 0.12);
+        } else playTone(329.63, 'triangle', 0.25, 0.14);
+      } else if (pack === 'mechanical') {
+        playTone(category === 'equals' ? 220 : 260, 'triangle', 0.05, 0.22, 0, 85);
+        playTone(1500, 'square', 0.025, 0.05, 0.01);
+      } else if (pack === 'retro') {
+        if (category === 'equals') {
+          playTone(523.25, 'square', 0.08, 0.06, 0);
+          playTone(659.25, 'square', 0.08, 0.06, 0.06);
+          playTone(783.99, 'square', 0.08, 0.06, 0.12);
+          playTone(1046.50, 'square', 0.20, 0.07, 0.18);
+        } else playTone(numNotes[keyVal] || 523.25, 'square', 0.07, 0.06);
+      } else if (pack === 'bubble') {
+        const base = (numNotes[keyVal] || 523) * 0.65;
+        playTone(base, 'sine', 0.12, 0.16, 0, base * 1.9);
+      } else if (pack === 'laser') {
+        const base = numNotes[keyVal] || 900;
+        playTone(base * 1.4, 'sawtooth', 0.09, 0.07, 0, base * 0.35);
+      } else if (pack === 'zen') {
+        playTone((numNotes[keyVal] || 523.25) * 0.5, 'sine', 0.55, 0.14);
+      }
+    }
+
+    function updateSoundControlsUI() {
+      const pct = Math.round(settings.volume * 100);
+      document.getElementById('volumeSlider').value = pct;
+      document.getElementById('volumeValueLabel').textContent = `${pct}%`;
+
+      document.getElementById('pitchSlider').value = Math.round(settings.pitch * 100);
+      document.getElementById('pitchValueLabel').textContent = `${settings.pitch.toFixed(1)}x`;
+
+      document.getElementById('decaySlider').value = Math.round(settings.decay * 100);
+      document.getElementById('decayValueLabel').textContent = `${settings.decay.toFixed(1)}s`;
+
+      const harmPct = Math.round(settings.harmony * 100);
+      document.getElementById('harmonySlider').value = harmPct;
+      document.getElementById('harmonyValueLabel').textContent = `${harmPct}%`;
+
+      document.getElementById('soundIconOn').classList.toggle('hidden', pct === 0);
+      document.getElementById('soundIconOff').classList.toggle('hidden', pct > 0);
+      document.getElementById('muteQuickBtn').textContent = pct === 0 ? 'Activar' : 'Silenciar';
+
+      const echoBadge = document.getElementById('echoStatusBadge');
+      echoBadge.textContent = settings.echo ? 'ON' : 'OFF';
+      echoBadge.style.background = settings.echo ? 'rgba(99,102,241,0.2)' : 'rgba(148,163,184,0.25)';
+      echoBadge.style.color = settings.echo ? '#818cf8' : '';
+
+      const hapticBadge = document.getElementById('hapticStatusBadge');
+      hapticBadge.textContent = settings.haptic ? 'ON' : 'OFF';
+      hapticBadge.style.background = settings.haptic ? 'rgba(16,185,129,0.2)' : 'rgba(148,163,184,0.25)';
+      hapticBadge.style.color = settings.haptic ? '#10b981' : '';
+
+      updateSoundPackUI();
+    }
+
+    // =========================================================================
+    // 5. ESTUDIO DE PIANO PRO: 1/2 OCTAVAS, ACORDES, METRÓNOMO, RITMOS Y SCOPE
+    // =========================================================================
+    const octaveTemplate = [
+      { semi: 0, name: 'Do', black: false, key1: 'A', key2: 'A' },
+      { semi: 1, name: 'Do#', black: true, key1: 'W', key2: 'W' },
+      { semi: 2, name: 'Re', black: false, key1: 'S', key2: 'S' },
+      { semi: 3, name: 'Re#', black: true, key1: 'E', key2: 'E' },
+      { semi: 4, name: 'Mi', black: false, key1: 'D', key2: 'D' },
+      { semi: 5, name: 'Fa', black: false, key1: 'F', key2: 'F' },
+      { semi: 6, name: 'Fa#', black: true, key1: 'T', key2: 'T' },
+      { semi: 7, name: 'Sol', black: false, key1: 'G', key2: 'G' },
+      { semi: 8, name: 'Sol#', black: true, key1: 'Y', key2: 'Y' },
+      { semi: 9, name: 'La', black: false, key1: 'H', key2: 'H' },
+      { semi: 10, name: 'La#', black: true, key1: 'U', key2: 'U' },
+      { semi: 11, name: 'Si', black: false, key1: 'J', key2: 'J' }
+    ];
+
+    const secondOctaveShortcuts = {
+      12: 'K', 13: 'O', 14: 'L', 15: 'P', 16: 'Z', 17: 'X',
+      18: 'C', 19: 'V', 20: 'B', 21: 'N', 22: 'M', 23: ',', 24: '.'
+    };
+
+    function buildPianoKeyboard() {
+      const bed = document.getElementById('pianoBedContainer');
+      const whitesLayer = document.getElementById('pianoWhitesLayer');
+      const blacksLayer = document.getElementById('pianoBlacksLayer');
+
+      bed.className = `piano-bed ${pianoOctaveSpan === 2 ? 'two-octaves' : 'one-octave'}`;
+      whitesLayer.innerHTML = '';
+      blacksLayer.innerHTML = '';
+
+      const totalSemitones = pianoOctaveSpan * 12;
+      const keys = [];
+      for (let s = 0; s <= totalSemitones; s++) {
+        const base = octaveTemplate[s % 12];
+        const octOffset = Math.floor(s / 12);
+        const suffix = octOffset === 1 ? '+' : octOffset === 2 ? '++' : '';
+        const shortcut = s < 12 ? base.key1 : (secondOctaveShortcuts[s] || '');
+        keys.push({
+          semi: s,
+          label: base.name + suffix,
+          black: base.black,
+          shortcut
+        });
+      }
+
+      const whiteKeys = keys.filter(k => !k.black);
+      const whiteCount = whiteKeys.length;
+      const whiteWidthPct = 100 / whiteCount;
+
+      let whiteIndex = 0;
+      keys.forEach(k => {
+        if (!k.black) {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'piano-key piano-key-white';
+          btn.setAttribute('data-semitone', k.semi);
+          btn.setAttribute('data-note', k.label);
+          btn.innerHTML = `<span>${k.label}</span><span style="font-size:8px;opacity:0.45;">${k.shortcut}</span>`;
+          attachPianoKeyEvents(btn, k.semi, k.label);
+          whitesLayer.appendChild(btn);
+          whiteIndex++;
+        } else {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'piano-key piano-key-black';
+          btn.setAttribute('data-semitone', k.semi);
+          btn.setAttribute('data-note', k.label);
+          btn.style.left = `${whiteIndex * whiteWidthPct}%`;
+          btn.style.width = `${whiteWidthPct * 0.62}%`;
+          btn.innerHTML = `<span>${k.label}</span>`;
+          attachPianoKeyEvents(btn, k.semi, k.label);
+          blacksLayer.appendChild(btn);
+        }
+      });
+    }
+
+    function attachPianoKeyEvents(btn, semi, label) {
+      btn.addEventListener('mousedown', () => triggerPianoKey(semi, label, btn));
+      btn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        triggerPianoKey(semi, label, btn);
+      }, { passive: false });
+    }
+
+    function getFrequencyForSemitone(semitone, octave) {
+      const midiNote = (octave + 1) * 12 + semitone;
+      return 440 * Math.pow(2, (midiNote - 69) / 12);
+    }
+
+    function getChordIntervals(mode) {
+      switch (mode) {
+        case 'major': return [0, 4, 7];
+        case 'minor': return [0, 3, 7];
+        case 'seventh': return [0, 4, 7, 10];
+        case 'octave': return [0, 12];
+        default: return [0];
+      }
+    }
+
+    function triggerPianoKey(semitone, noteLabel, btnEl = null) {
+      triggerHaptic();
+      const intervals = getChordIntervals(chordMode);
+      const sustainMult = sustainActive ? 2.4 : 1.0;
+
+      intervals.forEach((interval, idx) => {
+        const targetSemi = semitone + interval;
+        const freq = getFrequencyForSemitone(targetSemi, currentOctave);
+        playMusicalFreq(freq, settings.soundPack, sustainMult);
+
+        const keyEl = idx === 0 ? btnEl : document.querySelector(`.piano-key[data-semitone="${targetSemi}"]`);
+        if (keyEl) {
+          keyEl.classList.add('piano-active');
+          setTimeout(() => keyEl.classList.remove('piano-active'), 170);
+        }
+      });
+
+      const fullLabel = chordMode === 'single'
+        ? `${noteLabel}${currentOctave}`
+        : `${noteLabel}${currentOctave}[${chordMode === 'major' ? 'May' : chordMode === 'minor' ? 'Men' : chordMode === 'seventh' ? '7' : '8va'}]`;
+
+      if (isRecording) {
+        const now = Date.now();
+        const timeOffset = currentRecording.length === 0 ? 0 : Math.min(now - recordStartTime, 2500);
+        recordStartTime = now;
+        currentRecording.push({
+          note: fullLabel,
+          freq: getFrequencyForSemitone(semitone, currentOctave),
+          semitone,
+          octave: currentOctave,
+          chord: chordMode,
+          delay: timeOffset,
+          pack: settings.soundPack
+        });
+        updatePianoLogDisplay();
+      }
+    }
+
+    function updatePianoLogDisplay() {
+      const logDisp = document.getElementById('pianoLogDisplay');
+      document.getElementById('noteCountBadge').textContent = currentRecording.length;
+      document.getElementById('playRecordBtn').disabled = currentRecording.length === 0;
+
+      if (currentRecording.length === 0) {
+        logDisp.innerHTML = `<span class="text-slate-400 italic text-[11px]" style="font-weight:400;">Toca las teclas (A-K / Z-M), activa acordes o carga una melodía clásica...</span>`;
+        return;
+      }
+      logDisp.innerHTML = currentRecording.map(item => `
+        <span class="px-2 py-0.5 rounded-lg text-[10px] font-bold" style="background: rgba(99,102,241,0.2); color: #818cf8;">${item.note}</span>
+      `).join('');
+      logDisp.scrollTop = logDisp.scrollHeight;
+    }
+
+    function stopSequencePlayback() {
+      activePlaybackTimeouts.forEach(t => clearTimeout(t));
+      activePlaybackTimeouts = [];
+      isPlayingSequence = false;
+      const playBtn = document.getElementById('playRecordBtn');
+      if (playBtn) playBtn.textContent = '▶ Tocar';
+    }
+
+    function playSequence(notesArray) {
+      if (!notesArray || notesArray.length === 0) return;
+      if (isPlayingSequence) {
+        stopSequencePlayback();
+        return;
+      }
+
+      isPlayingSequence = true;
+      const playBtn = document.getElementById('playRecordBtn');
+      if (playBtn) playBtn.textContent = '■ Parar';
+
+      const schedulePass = () => {
+        let accumulatedTime = 0;
+        notesArray.forEach((item, idx) => {
+          const rawDelay = idx === 0 ? 0 : (item.delay !== undefined ? item.delay : 260);
+          accumulatedTime += rawDelay / playbackSpeed;
+
+          const t = setTimeout(() => {
+            const intervals = getChordIntervals(item.chord || 'single');
+            const sustainMult = sustainActive ? 2.2 : 1.0;
+            intervals.forEach(interval => {
+              const f = item.freq * Math.pow(2, interval / 12);
+              playMusicalFreq(f, item.pack || settings.soundPack, sustainMult);
+            });
+
+            const matchingKey = document.querySelector(`.piano-key[data-semitone="${item.semitone}"]`);
+            if (matchingKey) {
+              matchingKey.classList.add('piano-active');
+              setTimeout(() => matchingKey.classList.remove('piano-active'), 160);
+            }
+          }, accumulatedTime);
+          activePlaybackTimeouts.push(t);
+        });
+
+        const endTimeout = setTimeout(() => {
+          if (loopPlayback && isPlayingSequence) {
+            schedulePass();
+          } else {
+            stopSequencePlayback();
+          }
+        }, accumulatedTime + 350);
+        activePlaybackTimeouts.push(endTimeout);
+      };
+
+      schedulePass();
+    }
+
+    // Biblioteca de Melodías Clásicas Predefinidas
+    const presetMelodies = {
+      demo: {
+        label: 'Arpegio Demo',
+        steps: [[0,220],[4,220],[7,220],[12,260],[7,220],[4,220],[0,320]]
+      },
+      ode: {
+        label: 'Oda a la Alegría',
+        steps: [
+          [4,280],[4,280],[5,280],[7,280],[7,280],[5,280],[4,280],[2,280],
+          [0,280],[0,280],[2,280],[4,280],[4,400],[2,180],[2,450]
+        ]
+      },
+      twinkle: {
+        label: 'Estrellita',
+        steps: [
+          [0,280],[0,280],[7,280],[7,280],[9,280],[9,280],[7,480],
+          [5,280],[5,280],[4,280],[4,280],[2,280],[2,280],[0,480]
+        ]
+      },
+      elise: {
+        label: 'Para Elisa',
+        steps: [
+          [16,180],[15,180],[16,180],[15,180],[16,180],[11,180],[14,180],[12,180],[9,360],
+          [0,180],[4,180],[9,180],[11,360],[4,180],[8,180],[11,180],[12,360]
+        ]
+      },
+      pentatonic: {
+        label: 'Escala Pentatónica',
+        steps: [[0,200],[2,200],[4,200],[7,200],[9,200],[12,260],[9,200],[7,200],[4,200],[2,200],[0,300]]
+      }
+    };
+
+    const semiToNameMap = ['Do','Do#','Re','Re#','Mi','Fa','Fa#','Sol','Sol#','La','La#','Si'];
+    function getNoteNameFromSemi(semi) {
+      const base = semiToNameMap[semi % 12];
+      const octAdd = Math.floor(semi / 12);
+      return `${base}${currentOctave + octAdd}`;
+    }
+
+    // Metrónomo & Acompañamiento Rítmico Sincronizado
+    function updateClockEngine() {
+      if (metronomeTimer) {
+        clearInterval(metronomeTimer);
+        metronomeTimer = null;
+      }
+      const shouldRun = metronomeRunning || drumPattern !== 'off';
+      const led = document.getElementById('metronomeLed');
+
+      if (!shouldRun) {
+        if (led) led.style.background = '#64748b';
+        return;
+      }
+
+      metronomeBeat = 0;
+      const intervalMs = Math.round(60000 / bpm);
+
+      const tick = () => {
+        const beatsPerBar = drumPattern === 'waltz' ? 3 : 4;
+        const stepInBar = metronomeBeat % beatsPerBar;
+
+        // LED visual sincronizado
+        if (led) {
+          led.style.background = stepInBar === 0 ? '#10b981' : '#6366f1';
+          led.classList.remove('beat-pulse');
+          void led.offsetWidth;
+          led.classList.add('beat-pulse');
+        }
+
+        // Clic de metrónomo si está activo
+        if (metronomeRunning) {
+          playDrumHit(stepInBar === 0 ? 'click-high' : 'click-low');
+        }
+
+        // Ritmo sintetizado
+        if (drumPattern === 'pop') {
+          playDrumHit('hat');
+          if (stepInBar === 0 || stepInBar === 2) playDrumHit('kick');
+          if (stepInBar === 1 || stepInBar === 3) playDrumHit('snare');
+        } else if (drumPattern === 'lofi') {
+          playDrumHit('hat');
+          if (stepInBar === 0) playDrumHit('kick');
+          if (stepInBar === 2) playDrumHit('snare');
+        } else if (drumPattern === 'waltz') {
+          if (stepInBar === 0) playDrumHit('kick');
+          else playDrumHit('hat');
+        } else if (drumPattern === 'electro') {
+          playDrumHit('kick');
+          if (stepInBar === 1 || stepInBar === 3) playDrumHit('snare');
+          playDrumHit('hat');
+        }
+
+        metronomeBeat++;
+      };
+
+      tick();
+      metronomeTimer = setInterval(tick, intervalMs);
+    }
+
+    // Osciloscopio / Espectro Visual en Tiempo Real para el Piano
+    function startPianoOscilloscope() {
+      const scopeCanvas = document.getElementById('pianoScopeCanvas');
+      if (!scopeCanvas) return;
+      const sCtx = scopeCanvas.getContext('2d');
+
+      function renderScope() {
+        if (!pianoTab.classList.contains('hidden')) {
+          const rect = scopeCanvas.getBoundingClientRect();
+          if (rect.width > 0) {
+            if (scopeCanvas.width !== Math.round(rect.width)) {
+              scopeCanvas.width = Math.round(rect.width);
+              scopeCanvas.height = 26;
+            }
+            const w = scopeCanvas.width;
+            const h = scopeCanvas.height;
+            sCtx.clearRect(0, 0, w, h);
+
+            sCtx.lineWidth = 1.75;
+            sCtx.strokeStyle = strokeColor || '#6366f1';
+            sCtx.beginPath();
+
+            if (analyserNode && audioCtx && audioCtx.state === 'running') {
+              const bufferLength = analyserNode.frequencyBinCount;
+              const dataArray = new Uint8Array(bufferLength);
+              analyserNode.getByteTimeDomainData(dataArray);
+
+              const sliceWidth = w / bufferLength;
+              let x = 0;
+              for (let i = 0; i < bufferLength; i++) {
+                const v = dataArray[i] / 128.0;
+                const y = (v * h) / 2;
+                if (i === 0) sCtx.moveTo(x, y);
+                else sCtx.lineTo(x, y);
+                x += sliceWidth;
+              }
+            } else {
+              sCtx.moveTo(0, h / 2);
+              sCtx.lineTo(w, h / 2);
+            }
+            sCtx.stroke();
+          }
+        }
+        requestAnimationFrame(renderScope);
+      }
+      requestAnimationFrame(renderScope);
+    }
+
+    // =========================================================================
+    // 6. EVENTOS DE PIANO Y COMPOSICIONES
+    // =========================================================================
+    document.getElementById('octaveDownBtn').addEventListener('click', () => {
+      currentOctave = Math.max(2, currentOctave - 1);
+      document.getElementById('octaveDisplay').textContent = `Oct ${currentOctave}`;
+      playSound('ui');
+    });
+
+    document.getElementById('octaveUpBtn').addEventListener('click', () => {
+      currentOctave = Math.min(6, currentOctave + 1);
+      document.getElementById('octaveDisplay').textContent = `Oct ${currentOctave}`;
+      playSound('ui');
+    });
+
+    document.getElementById('pianoSpanBtn').addEventListener('click', (e) => {
+      pianoOctaveSpan = pianoOctaveSpan === 1 ? 2 : 1;
+      e.target.textContent = pianoOctaveSpan === 2 ? '2 Oct' : '1 Oct';
+      buildPianoKeyboard();
+      playSound('ui');
+    });
+
+    const sustainBtn = document.getElementById('sustainToggleBtn');
+    function toggleSustain() {
+      sustainActive = !sustainActive;
+      sustainBtn.textContent = sustainActive ? 'Sustain: ON' : 'Sustain: OFF';
+      sustainBtn.style.borderColor = sustainActive ? '#6366f1' : '';
+      sustainBtn.style.color = sustainActive ? '#818cf8' : '';
+    }
+    sustainBtn.addEventListener('click', () => { toggleSustain(); playSound('ui'); });
+
+    document.getElementById('chordModeSelect').addEventListener('change', (e) => {
+      chordMode = e.target.value;
+      playSound('ui');
+    });
+
+    const metronomeBtn = document.getElementById('metronomeToggleBtn');
+    metronomeBtn.addEventListener('click', () => {
+      metronomeRunning = !metronomeRunning;
+      metronomeBtn.style.borderColor = metronomeRunning ? '#10b981' : '';
+      metronomeBtn.style.color = metronomeRunning ? '#10b981' : '';
+      updateClockEngine();
+    });
+
+    document.getElementById('bpmDownBtn').addEventListener('click', () => {
+      bpm = Math.max(40, bpm - 5);
+      document.getElementById('bpmLabel').textContent = `${bpm} BPM`;
+      if (metronomeRunning || drumPattern !== 'off') updateClockEngine();
+    });
+
+    document.getElementById('bpmUpBtn').addEventListener('click', () => {
+      bpm = Math.min(220, bpm + 5);
+      document.getElementById('bpmLabel').textContent = `${bpm} BPM`;
+      if (metronomeRunning || drumPattern !== 'off') updateClockEngine();
+    });
+
+    document.getElementById('drumPatternSelect').addEventListener('change', (e) => {
+      drumPattern = e.target.value;
+      updateClockEngine();
+    });
+
+    document.getElementById('presetMelodySelect').addEventListener('change', (e) => {
+      const key = e.target.value;
+      if (!key || !presetMelodies[key]) return;
+      if (key === 'elise' && pianoOctaveSpan === 1) {
+        pianoOctaveSpan = 2;
+        document.getElementById('pianoSpanBtn').textContent = '2 Oct';
+        buildPianoKeyboard();
+      }
+      stopSequencePlayback();
+      isRecording = false;
+      document.getElementById('recordLabel').textContent = 'Grabar';
+
+      const preset = presetMelodies[key];
+      currentRecording = preset.steps.map((step, idx) => ({
+        note: getNoteNameFromSemi(step[0]),
+        freq: getFrequencyForSemitone(step[0], currentOctave),
+        semitone: step[0],
+        octave: currentOctave,
+        chord: 'single',
+        delay: idx === 0 ? 0 : step[1],
+        pack: settings.soundPack
+      }));
+      updatePianoLogDisplay();
+      playSequence(currentRecording);
+      e.target.value = '';
+    });
+
+    document.getElementById('playbackSpeedBtn').addEventListener('click', (e) => {
+      playbackSpeed = playbackSpeed === 1.0 ? 1.5 : playbackSpeed === 1.5 ? 0.5 : 1.0;
+      e.target.textContent = `${playbackSpeed.toFixed(1)}x`;
+      playSound('ui');
+    });
+
+    document.getElementById('loopToggleBtn').addEventListener('click', (e) => {
+      loopPlayback = !loopPlayback;
+      e.target.textContent = loopPlayback ? 'Loop: ON' : 'Loop: OFF';
+      e.target.style.color = loopPlayback ? '#818cf8' : '';
+      playSound('ui');
+    });
+
+    const recordToggleBtn = document.getElementById('recordToggleBtn');
+    const recordLabel = document.getElementById('recordLabel');
+
+    recordToggleBtn.addEventListener('click', () => {
+      stopSequencePlayback();
+      isRecording = !isRecording;
+      if (isRecording) {
+        currentRecording = [];
+        recordStartTime = Date.now();
+        updatePianoLogDisplay();
+        recordLabel.textContent = 'Detener';
+        recordLabel.classList.add('text-rose-500');
+      } else {
+        recordLabel.textContent = 'Grabar';
+        recordLabel.classList.remove('text-rose-500');
+      }
+    });
+
+    document.getElementById('clearNotesBtn').addEventListener('click', () => {
+      stopSequencePlayback();
+      currentRecording = [];
+      updatePianoLogDisplay();
+      playSound('clear');
+    });
+
+    document.getElementById('playRecordBtn').addEventListener('click', () => {
+      playSequence(currentRecording);
+    });
+
+    document.getElementById('saveCompositionBtn').addEventListener('click', () => {
+      if (currentRecording.length === 0) {
+        playSound('clear');
+        return;
+      }
+      const nameInput = document.getElementById('melodyNameInput');
+      const title = nameInput.value.trim() || `Melodía #${savedCompositions.length + 1}`;
+      savedCompositions.unshift({
+        title,
+        notes: [...currentRecording],
+        packName: packNames[settings.soundPack] || 'Piano',
+        date: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      });
+      try {
+        localStorage.setItem('piano_compositions_v2', JSON.stringify(savedCompositions));
+        updateStorageUsageUI();
+      } catch (e) {}
+      nameInput.value = '';
+      renderCompositions();
+      playSound('equals');
+    });
+
+    function renderCompositions() {
+      const list = document.getElementById('savedCompositionsList');
+      document.getElementById('savedCountLabel').textContent = savedCompositions.length;
+      if (savedCompositions.length === 0) {
+        list.innerHTML = `<div class="text-center text-[11px] text-slate-400 py-2">No hay melodías guardadas aún</div>`;
+        return;
+      }
+      list.innerHTML = savedCompositions.map((comp, idx) => `
+        <div class="ui-surface-btn flex items-center justify-between p-2 rounded-xl text-xs">
+          <div class="truncate pr-2">
+            <div class="font-bold truncate">${comp.title}</div>
+            <div class="text-[9px] text-slate-400">${comp.notes.length} notas • ${comp.packName || 'Piano'} • ${comp.date || ''}</div>
+          </div>
+          <div class="flex space-x-1 shrink-0">
+            <button type="button" class="px-2 py-1 rounded-lg text-white font-bold text-[10px] play-saved-btn btn-press" style="background:#6366f1;" data-index="${idx}" title="Reproducir">▶</button>
+            <button type="button" class="px-2 py-1 rounded-lg font-bold text-[10px] load-saved-btn btn-press" style="background:rgba(16,185,129,0.2);color:#10b981;" data-index="${idx}" title="Cargar">↑</button>
+            <button type="button" class="px-2 py-1 rounded-lg font-bold text-[10px] del-saved-btn btn-press" style="background:rgba(244,63,94,0.2);color:#f43f5e;" data-index="${idx}" title="Eliminar">✕</button>
+          </div>
+        </div>
+      `).join('');
+
+      list.querySelectorAll('.play-saved-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const comp = savedCompositions[btn.getAttribute('data-index')];
+          if (comp) playSequence(comp.notes);
+        });
+      });
+
+      list.querySelectorAll('.load-saved-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const comp = savedCompositions[btn.getAttribute('data-index')];
+          if (comp) {
+            currentRecording = [...comp.notes];
+            updatePianoLogDisplay();
+            playSound('ui');
+          }
+        });
+      });
+
+      list.querySelectorAll('.del-saved-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          savedCompositions.splice(parseInt(btn.getAttribute('data-index'), 10), 1);
+          try {
+            localStorage.setItem('piano_compositions_v2', JSON.stringify(savedCompositions));
+            updateStorageUsageUI();
+          } catch (e) {}
+          renderCompositions();
+          playSound('clear');
+        });
+      });
+    }
+
+    // =========================================================================
+    // 7. LÓGICA DE CALCULADORA
+    // =========================================================================
+    function triggerHaptic() {
+      if (settings.haptic && navigator.vibrate) {
+        try { navigator.vibrate(12); } catch (e) {}
+      }
+    }
+
+    function handleNumber(num) {
+      playSound('num', num);
+      triggerHaptic();
+      if (shouldResetDisplay) {
+        currentValue = num === '.' ? '0.' : num;
+        shouldResetDisplay = false;
+      } else {
+        if (num === '.' && currentValue.includes('.')) return;
+        if (currentValue === '0' && num !== '.') currentValue = num;
+        else {
+          if (currentValue.replace('.', '').length >= 12) return;
+          currentValue += num;
+        }
+      }
+      updateDisplay();
+    }
+
+    function getOpSymbol(op) {
+      return { add: '+', subtract: '-', multiply: '×', divide: '÷' }[op] || '';
+    }
+
+    function handleOperation(op) {
+      playSound('op');
+      triggerHaptic();
+      if (currentOperation && !shouldResetDisplay) calculateResult(true);
+      previousValue = currentValue;
+      currentOperation = op;
+      shouldResetDisplay = true;
+      expressionDisplay.textContent = `${formatNumber(previousValue)} ${getOpSymbol(op)}`;
+    }
+
+    function calculateResult(silent = false) {
+      if (!currentOperation || previousValue === null) return;
+      if (!silent) playSound('equals');
+      const prev = parseFloat(previousValue);
+      const current = parseFloat(currentValue);
+      let result = 0;
+
+      switch (currentOperation) {
+        case 'add': result = prev + current; break;
+        case 'subtract': result = prev - current; break;
+        case 'multiply': result = prev * current; break;
+        case 'divide': result = current === 0 ? 'Error' : prev / current; break;
+      }
+
+      const expr = `${formatNumber(previousValue)} ${getOpSymbol(currentOperation)} ${formatNumber(currentValue)} =`;
+      expressionDisplay.textContent = expr;
+
+      if (result !== 'Error') {
+        result = Math.round(result * 1e10) / 1e10;
+        addToHistory(expr, result.toString());
+        currentValue = result.toString();
+      } else {
+        currentValue = 'Error';
+      }
+
+      currentOperation = null;
+      previousValue = null;
+      shouldResetDisplay = true;
+      updateDisplay();
+    }
+
+    function applyScientific(fn, name) {
+      if (currentValue === 'Error') return;
+      playSound('equals');
+      const val = parseFloat(currentValue);
+      try {
+        const res = Math.round(fn(val) * 1e10) / 1e10;
+        if (isNaN(res) || !isFinite(res)) throw new Error('Math error');
+        const expr = `${name}(${formatNumber(currentValue)}) =`;
+        expressionDisplay.textContent = expr;
+        addToHistory(expr, res.toString());
+        currentValue = res.toString();
+        shouldResetDisplay = true;
+        updateDisplay();
+      } catch (e) {
+        currentValue = 'Error';
+        updateDisplay();
+      }
+    }
+
+    function handleAction(action) {
+      triggerHaptic();
+      const numVal = parseFloat(currentValue);
+      switch (action) {
+        case 'clear':
+          playSound('clear');
+          currentValue = '0';
+          previousValue = null;
+          currentOperation = null;
+          shouldResetDisplay = false;
+          expressionDisplay.textContent = '';
+          updateDisplay();
+          break;
+        case 'backspace':
+          playSound('clear');
+          if (shouldResetDisplay) return;
+          currentValue = currentValue.length > 1 ? currentValue.slice(0, -1) : '0';
+          updateDisplay();
+          break;
+        case 'toggle-sign':
+          playSound('op');
+          if (currentValue !== '0' && currentValue !== 'Error') {
+            currentValue = (parseFloat(currentValue) * -1).toString();
+            updateDisplay();
+          }
+          break;
+        case 'percent':
+          playSound('op');
+          if (currentValue !== 'Error') {
+            currentValue = (parseFloat(currentValue) / 100).toString();
+            updateDisplay();
+          }
+          break;
+        case 'equals': calculateResult(); break;
+        case 'mc': playSound('clear'); memoryValue = 0; updateDisplay(); break;
+        case 'mr': playSound('op'); currentValue = memoryValue.toString(); shouldResetDisplay = true; updateDisplay(); break;
+        case 'm-add': playSound('op'); if (!isNaN(numVal)) memoryValue += numVal; shouldResetDisplay = true; updateDisplay(); break;
+        case 'm-sub': playSound('op'); if (!isNaN(numVal)) memoryValue -= numVal; shouldResetDisplay = true; updateDisplay(); break;
+        case 'sin': applyScientific(x => Math.sin(x * Math.PI / 180), 'sin'); break;
+        case 'cos': applyScientific(x => Math.cos(x * Math.PI / 180), 'cos'); break;
+        case 'tan': applyScientific(x => Math.tan(x * Math.PI / 180), 'tan'); break;
+        case 'log': applyScientific(x => Math.log10(x), 'log'); break;
+        case 'ln': applyScientific(x => Math.log(x), 'ln'); break;
+        case 'sqrt': applyScientific(x => Math.sqrt(x), '√'); break;
+        case 'pow': applyScientific(x => Math.pow(x, 2), 'sqr'); break;
+        case 'pi': playSound('num', '3'); currentValue = Math.PI.toString(); shouldResetDisplay = false; updateDisplay(); break;
+      }
+    }
+
+    function addToHistory(expression, result) {
+      history.unshift({ expression, result });
+      if (history.length > 20) history.pop();
+      renderHistory();
+    }
+
+    function renderHistory() {
+      const historyList = document.getElementById('historyList');
+      if (history.length === 0) {
+        historyList.innerHTML = `<div class="text-center text-xs text-slate-400 py-8">No hay operaciones recientes</div>`;
+        return;
+      }
+      historyList.innerHTML = history.map((item, index) => `
+        <div class="soft-box p-2.5 rounded-xl cursor-pointer btn-press" data-index="${index}">
+          <div class="text-xs text-slate-400 text-right">${item.expression}</div>
+          <div class="text-base font-bold text-right">${formatNumber(item.result)}</div>
+        </div>
+      `).join('');
+
+      historyList.querySelectorAll('[data-index]').forEach(el => {
+        el.addEventListener('click', () => {
+          playSound('ui');
+          currentValue = history[el.getAttribute('data-index')].result;
+          shouldResetDisplay = false;
+          updateDisplay();
+          toggleHistory(false);
+        });
+      });
+    }
+
+    function toggleHistory(show) {
+      playSound('ui');
+      const overlay = document.getElementById('historyOverlay');
+      overlay.classList.toggle('overlay-hidden', !show);
+      overlay.classList.toggle('overlay-visible', show);
+    }
+
+    // =========================================================================
+    // 8. LÓGICA DE GRAFICADORA 2D
+    // =========================================================================
+    const canvas = document.getElementById('graphCanvas');
+    const ctx = canvas.getContext('2d');
+    const functionInput = document.getElementById('functionInput');
+    const graphError = document.getElementById('graphError');
+    const coordBadge = document.getElementById('coordBadge');
+
+    function resizeCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return;
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function parseFunction(expr) {
+      if (!expr.trim()) return null;
+      let formatted = expr
+        .toLowerCase()
+        .replace(/sin/g, 'Math.sin')
+        .replace(/cos/g, 'Math.cos')
+        .replace(/tan/g, 'Math.tan')
+        .replace(/sqrt/g, 'Math.sqrt')
+        .replace(/abs/g, 'Math.abs')
+        .replace(/log/g, 'Math.log10')
+        .replace(/ln/g, 'Math.log')
+        .replace(/pi/g, 'Math.PI')
+        .replace(/\be\b/g, 'Math.E')
+        .replace(/\^/g, '**')
+        .replace(/(\d)(x|\(|Math)/g, '$1*$2')
+        .replace(/(\))(x|\(|Math|\d)/g, '$1*$2')
+        .replace(/(x)(\()/g, '$1*$2');
+      return new Function('x', `return ${formatted};`);
+    }
+
+    function drawGraph() {
+      const rect = canvas.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return;
+      const dpr = window.devicePixelRatio || 1;
+      if (canvas.width !== Math.round(rect.width * dpr) || canvas.height !== Math.round(rect.height * dpr)) {
+        resizeCanvas();
+      }
+
+      const width = rect.width;
+      const height = rect.height;
+      ctx.clearRect(0, 0, width, height);
+
+      const centerX = width / 2 + offsetX;
+      const centerY = height / 2 + offsetY;
+
+      ctx.strokeStyle = 'rgba(30, 41, 59, 0.45)';
+      ctx.lineWidth = 0.5;
+      ctx.beginPath();
+      const subGridSize = scale / 2;
+      if (subGridSize > 8) {
+        for (let x = centerX % subGridSize; x < width; x += subGridSize) { ctx.moveTo(x, 0); ctx.lineTo(x, height); }
+        for (let y = centerY % subGridSize; y < height; y += subGridSize) { ctx.moveTo(0, y); ctx.lineTo(width, y); }
+      }
+      ctx.stroke();
+
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      const gridSize = scale;
+      const startGridX = centerX % gridSize;
+      for (let x = startGridX; x < width; x += gridSize) { ctx.moveTo(x, 0); ctx.lineTo(x, height); }
+      const startGridY = centerY % gridSize;
+      for (let y = startGridY; y < height; y += gridSize) { ctx.moveTo(0, y); ctx.lineTo(width, y); }
+      ctx.stroke();
+
+      ctx.strokeStyle = '#64748b';
+      ctx.lineWidth = 1.75;
+      ctx.beginPath();
+      ctx.moveTo(0, centerY); ctx.lineTo(width, centerY);
+      ctx.moveTo(centerX, 0); ctx.lineTo(centerX, height);
+      ctx.stroke();
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '10px sans-serif';
+      ctx.textAlign = 'center';
+      const step = scale < 18 ? 5 : scale < 28 ? 2 : 1;
+
+      for (let x = startGridX; x < width; x += gridSize) {
+        const val = Math.round((x - centerX) / scale);
+        if (val !== 0 && val % step === 0) {
+          ctx.fillText(val, x, Math.min(Math.max(centerY + 13, 12), height - 5));
+        }
+      }
+      ctx.textAlign = 'right';
+      for (let y = startGridY; y < height; y += gridSize) {
+        const val = Math.round((centerY - y) / scale);
+        if (val !== 0 && val % step === 0) {
+          ctx.fillText(val, Math.min(Math.max(centerX - 6, 22), width - 5), y + 3);
+        }
+      }
+
+      try {
+        compiledFunc = parseFunction(functionInput.value);
+        if (!compiledFunc) return;
+        compiledFunc(1);
+        graphError.classList.add('hidden');
+
+        ctx.save();
+        ctx.strokeStyle = strokeColor;
+        ctx.lineWidth = 2.5;
+        ctx.shadowColor = strokeColor;
+        ctx.shadowBlur = 8;
+        ctx.beginPath();
+
+        let isFirstPoint = true;
+        for (let px = 0; px <= width; px += 1) {
+          const x = (px - centerX) / scale;
+          try {
+            const y = compiledFunc(x);
+            if (typeof y === 'number' && !isNaN(y) && isFinite(y)) {
+              const py = centerY - (y * scale);
+              if (py < -height * 2 || py > height * 3) { isFirstPoint = true; continue; }
+              if (isFirstPoint) { ctx.moveTo(px, py); isFirstPoint = false; }
+              else { ctx.lineTo(px, py); }
+            } else { isFirstPoint = true; }
+          } catch (e) { isFirstPoint = true; }
+        }
+        ctx.stroke();
+        ctx.restore();
+
+        if (hoverMouseX !== null && hoverMouseX >= 0 && hoverMouseX <= width) {
+          const mathX = (hoverMouseX - centerX) / scale;
+          const mathY = compiledFunc(mathX);
+          if (typeof mathY === 'number' && !isNaN(mathY) && isFinite(mathY)) {
+            const pointPy = centerY - (mathY * scale);
+            ctx.save();
+            ctx.setLineDash([4, 4]);
+            ctx.strokeStyle = 'rgba(148, 163, 184, 0.5)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(hoverMouseX, 0);
+            ctx.lineTo(hoverMouseX, height);
+            ctx.stroke();
+            ctx.restore();
+
+            if (pointPy >= 0 && pointPy <= height) {
+              ctx.beginPath();
+              ctx.arc(hoverMouseX, pointPy, 5, 0, Math.PI * 2);
+              ctx.fillStyle = '#ffffff';
+              ctx.fill();
+              ctx.lineWidth = 2.5;
+              ctx.strokeStyle = strokeColor;
+              ctx.stroke();
+            }
+            coordBadge.classList.remove('hidden');
+            document.getElementById('coordX').textContent = mathX.toFixed(2);
+            document.getElementById('coordY').textContent = mathY.toFixed(2);
+          } else { coordBadge.classList.add('hidden'); }
+        }
+      } catch (e) {
+        graphError.classList.remove('hidden');
+        coordBadge.classList.add('hidden');
+      }
+    }
+
+    // =========================================================================
+    // 9. EVENTOS DE PANELES SUPERIORES, PERSONALIZACIÓN, GRAFICADORA Y TECLADO
+    // =========================================================================
+    function toggleDropdownPanel(panelToToggle) {
+      [offlinePanel, soundPanel, colorPalette].forEach(p => {
+        if (p !== panelToToggle) p.classList.add('hidden');
+      });
+      panelToToggle.classList.toggle('hidden');
+      playSound('ui');
+    }
+
+    document.getElementById('offlineMenuBtn').addEventListener('click', () => {
+      updateNetworkUI();
+      toggleDropdownPanel(offlinePanel);
+    });
+    document.getElementById('soundMenuBtn').addEventListener('click', () => toggleDropdownPanel(soundPanel));
+    document.getElementById('colorMenuBtn').addEventListener('click', () => toggleDropdownPanel(colorPalette));
+
+    // Acciones Offline: Forzar Caché, Exportar Respaldo JSON e Importar Respaldo JSON
+    document.getElementById('forceCacheBtn').addEventListener('click', () => {
+      cacheCurrentDocumentOffline(false);
+      playSound('equals');
+    });
+
+    document.getElementById('exportBackupBtn').addEventListener('click', () => {
+      const backupPayload = {
+        app: 'CalculadoraGraficadoraPianoPro',
+        version: 'offline-v1',
+        exportedAt: new Date().toISOString(),
+        settings,
+        history,
+        savedCompositions
+      };
+      const blob = new Blob([JSON.stringify(backupPayload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `respaldo_calc_piano_${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showOfflineFeedback('Respaldo JSON descargado correctamente.');
+      playSound('equals');
+    });
+
+    document.getElementById('importBackupInput').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const data = JSON.parse(ev.target.result);
+          if (data.settings) {
+            settings = { ...defaultSettings, ...data.settings, customColors: { ...defaultSettings.customColors, ...(data.settings.customColors || {}) } };
+            saveSettings();
+            applyAllAppearance();
+            updateSoundControlsUI();
+          }
+          if (Array.isArray(data.history)) {
+            history = data.history;
+            renderHistory();
+          }
+          if (Array.isArray(data.savedCompositions)) {
+            savedCompositions = data.savedCompositions;
+            localStorage.setItem('piano_compositions_v2', JSON.stringify(savedCompositions));
+            renderCompositions();
+          }
+          updateStorageUsageUI();
+          showOfflineFeedback('Respaldo restaurado exitosamente.');
+          playSound('equals');
+        } catch (err) {
+          showOfflineFeedback('Archivo de respaldo no válido.');
+        }
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+    });
+
+    // Subpestañas de personalización
+    document.querySelectorAll('.custom-tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = btn.getAttribute('data-customtab');
+        document.querySelectorAll('.custom-tab-btn').forEach(b => {
+          b.className = "custom-tab-btn nav-tab-inactive px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all";
+        });
+        btn.className = "custom-tab-btn nav-tab-active px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all";
+        ['themes', 'customcolors', 'style'].forEach(id => {
+          document.getElementById(`panel-${id}`).classList.toggle('hidden', id !== target);
+        });
+        playSound('ui');
+      });
+    });
+
+    document.querySelectorAll('.preset-palette-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const preset = masterPresets[btn.getAttribute('data-preset')];
+        if (!preset) return;
+        settings.useCustomColors = true;
+        settings.darkMode = preset.darkMode;
+        settings.customColors = { ...preset.colors };
+        applyAllAppearance();
+        playSound('equals');
+      });
+    });
+
+    document.querySelectorAll('.bg-opt').forEach(btn => {
+      btn.addEventListener('click', () => {
+        settings.useCustomColors = false;
+        settings.bgKey = btn.getAttribute('data-bg');
+        applyAllAppearance();
+        playSound('ui');
+      });
+    });
+
+    document.querySelectorAll('.color-opt').forEach(btn => {
+      btn.addEventListener('click', () => {
+        settings.useCustomColors = false;
+        settings.themeKey = btn.getAttribute('data-theme');
+        applyAllAppearance();
+        playSound('ui');
+      });
+    });
+
+    document.querySelectorAll('.color-target-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        activeColorTarget = btn.getAttribute('data-target');
+        syncColorStudioUI();
+        playSound('ui');
+      });
+    });
+
+    const hsvSatValBox = document.getElementById('hsvSatValBox');
+    const hsvHueStrip = document.getElementById('hsvHueStrip');
+    let isDraggingSV = false;
+    let isDraggingHue = false;
+
+    function updateSVFromPointer(clientX, clientY) {
+      const rect = hsvSatValBox.getBoundingClientRect();
+      const s = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
+      const v = Math.max(0, Math.min(100, 100 - ((clientY - rect.top) / rect.height) * 100));
+      const currentHsv = hexToHsv(settings.customColors[activeColorTarget]);
+      settings.useCustomColors = true;
+      settings.customColors[activeColorTarget] = hsvToHex(currentHsv.h, s, v);
+      applyAllAppearance();
+    }
+
+    hsvSatValBox.addEventListener('mousedown', (e) => { isDraggingSV = true; updateSVFromPointer(e.clientX, e.clientY); });
+    window.addEventListener('mousemove', (e) => { if (isDraggingSV) updateSVFromPointer(e.clientX, e.clientY); });
+    window.addEventListener('mouseup', () => { isDraggingSV = false; });
+
+    function updateHueFromPointer(clientX) {
+      const rect = hsvHueStrip.getBoundingClientRect();
+      const h = Math.max(0, Math.min(359, Math.round(((clientX - rect.left) / rect.width) * 360)));
+      const currentHsv = hexToHsv(settings.customColors[activeColorTarget]);
+      settings.useCustomColors = true;
+      settings.customColors[activeColorTarget] = hsvToHex(h, currentHsv.s || 80, currentHsv.v || 90);
+      applyAllAppearance();
+    }
+
+    hsvHueStrip.addEventListener('mousedown', (e) => { isDraggingHue = true; updateHueFromPointer(e.clientX); });
+    window.addEventListener('mousemove', (e) => { if (isDraggingHue) updateHueFromPointer(e.clientX); });
+    window.addEventListener('mouseup', () => { isDraggingHue = false; });
+
+    document.getElementById('hexCodeInput').addEventListener('input', (e) => {
+      const valid = normalizeHex(e.target.value);
+      if (valid) {
+        settings.useCustomColors = true;
+        settings.customColors[activeColorTarget] = valid;
+        applyAllAppearance();
+      }
+    });
+
+    document.getElementById('nativeColorSync').addEventListener('input', (e) => {
+      settings.useCustomColors = true;
+      settings.customColors[activeColorTarget] = e.target.value;
+      applyAllAppearance();
+    });
+
+    document.getElementById('copyHexBtn').addEventListener('click', (e) => {
+      const hexText = '#' + document.getElementById('hexCodeInput').value.toUpperCase();
+      const tempInput = document.createElement('input');
+      tempInput.value = hexText;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      try {
+        document.execCommand('copy');
+        e.target.textContent = '✓';
+        setTimeout(() => { e.target.textContent = 'Copiar'; }, 1200);
+      } catch (err) {}
+      document.body.removeChild(tempInput);
+      playSound('ui');
+    });
+
+    document.getElementById('randomHarmonyBtn').addEventListener('click', () => {
+      const baseHue = Math.floor(Math.random() * 360);
+      const compHue = (baseHue + 35) % 360;
+      const accentHue = (baseHue + 150) % 360;
+      settings.useCustomColors = true;
+      if (settings.darkMode) {
+        settings.customColors = {
+          bg: hsvToHex(baseHue, 65, 10), bg2: hsvToHex(compHue, 70, 18), panel: hsvToHex(baseHue, 50, 14),
+          display: hsvToHex(baseHue, 75, 7), num: hsvToHex(baseHue, 35, 22), op: hsvToHex(compHue, 65, 36),
+          func: hsvToHex(baseHue, 30, 28), equals: hsvToHex(accentHue, 78, 88), stroke: hsvToHex(accentHue, 85, 95)
+        };
+      } else {
+        settings.customColors = {
+          bg: hsvToHex(baseHue, 18, 97), bg2: hsvToHex(compHue, 24, 94), panel: '#ffffff',
+          display: hsvToHex(baseHue, 14, 92), num: '#ffffff', op: hsvToHex(compHue, 35, 90),
+          func: hsvToHex(baseHue, 20, 88), equals: hsvToHex(accentHue, 75, 65), stroke: hsvToHex(accentHue, 80, 55)
+        };
+      }
+      applyAllAppearance();
+      playSound('equals');
+    });
+
+    document.getElementById('autoContrastToggleBtn').addEventListener('click', () => {
+      settings.autoContrast = !settings.autoContrast;
+      applyAllAppearance();
+      playSound('ui');
+    });
+
+    document.querySelectorAll('.grad-dir-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        settings.useCustomColors = true;
+        settings.gradientDir = btn.getAttribute('data-dir');
+        applyAllAppearance();
+        playSound('ui');
+      });
+    });
+
+    document.querySelectorAll('.shape-opt').forEach(btn => {
+      btn.addEventListener('click', () => {
+        settings.btnShape = btn.getAttribute('data-shape');
+        applyAllAppearance();
+        playSound('ui');
+      });
+    });
+
+    document.querySelectorAll('.font-opt').forEach(btn => {
+      btn.addEventListener('click', () => {
+        settings.fontType = btn.getAttribute('data-font');
+        applyAllAppearance();
+        playSound('ui');
+      });
+    });
+
+    document.getElementById('glassOpacitySlider').addEventListener('input', (e) => {
+      settings.glassOpacity = parseInt(e.target.value, 10);
+      applyAllAppearance();
+    });
+    document.getElementById('displaySizeSlider').addEventListener('input', (e) => {
+      settings.displayFontSize = parseInt(e.target.value, 10);
+      applyAllAppearance();
+    });
+    document.getElementById('btnSizeSlider').addEventListener('input', (e) => {
+      settings.btnFontSize = parseInt(e.target.value, 10);
+      applyAllAppearance();
+    });
+
+    document.getElementById('resetAllCustomBtn').addEventListener('click', () => {
+      settings = JSON.parse(JSON.stringify(defaultSettings));
+      applyAllAppearance();
+      updateSoundControlsUI();
+      playSound('clear');
+    });
+
+    function toggleAppFullscreen() {
+      isFullscreenMode = !isFullscreenMode;
+      playSound('ui');
+      mainContainer.classList.toggle('app-fullscreen', isFullscreenMode);
+      if (isFullscreenMode && document.documentElement.requestFullscreen && !document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else if (!isFullscreenMode && document.fullscreenElement && document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+      }
+      setTimeout(() => { if (!grapherTab.classList.contains('hidden')) { resizeCanvas(); drawGraph(); } }, 100);
+    }
+    document.getElementById('fullscreenToggleBtn').addEventListener('click', toggleAppFullscreen);
+
+    // Cambio de pestañas principales
+    const tabCalcBtn = document.getElementById('tabCalcBtn');
+    const tabGraphBtn = document.getElementById('tabGraphBtn');
+    const tabPianoBtn = document.getElementById('tabPianoBtn');
+
+    function switchMainTab(target) {
+      playSound('ui');
+      calculatorTab.classList.toggle('hidden', target !== 'calc');
+      grapherTab.classList.toggle('hidden', target !== 'graph');
+      pianoTab.classList.toggle('hidden', target !== 'piano');
+
+      const activeClass = "nav-tab-active px-2.5 py-1.5 text-xs font-bold rounded-xl transition-all flex items-center space-x-1 shrink-0";
+      const inactiveClass = "nav-tab-inactive px-2.5 py-1.5 text-xs font-bold rounded-xl transition-all flex items-center space-x-1 shrink-0";
+
+      tabCalcBtn.className = target === 'calc' ? activeClass : inactiveClass;
+      tabGraphBtn.className = target === 'graph' ? activeClass : inactiveClass;
+      tabPianoBtn.className = target === 'piano' ? activeClass : inactiveClass;
+
+      if (!isFullscreenMode) {
+        mainContainer.classList.toggle('max-w-3xl', target === 'graph' && isWideMode);
+      }
+
+      if (target === 'graph') {
+        setTimeout(() => { resizeCanvas(); drawGraph(); }, 60);
+      }
+    }
+
+    tabCalcBtn.addEventListener('click', () => switchMainTab('calc'));
+    tabGraphBtn.addEventListener('click', () => switchMainTab('graph'));
+    tabPianoBtn.addEventListener('click', () => switchMainTab('piano'));
+
+    // Controles de sonido
+    document.getElementById('volumeSlider').addEventListener('input', (e) => {
+      settings.volume = parseInt(e.target.value, 10) / 100;
+      if (settings.volume > 0) previousVolume = settings.volume;
+      updateSoundControlsUI();
+      saveSettings();
+    });
+    document.getElementById('pitchSlider').addEventListener('input', (e) => {
+      settings.pitch = parseInt(e.target.value, 10) / 100;
+      updateSoundControlsUI();
+      saveSettings();
+    });
+    document.getElementById('decaySlider').addEventListener('input', (e) => {
+      settings.decay = parseInt(e.target.value, 10) / 100;
+      updateSoundControlsUI();
+      saveSettings();
+    });
+    document.getElementById('harmonySlider').addEventListener('input', (e) => {
+      settings.harmony = parseInt(e.target.value, 10) / 100;
+      updateSoundControlsUI();
+      saveSettings();
+    });
+    document.getElementById('testChordBtn').addEventListener('click', () => playSound('equals'));
+
+    document.getElementById('muteQuickBtn').addEventListener('click', () => {
+      if (settings.volume > 0) { previousVolume = settings.volume; settings.volume = 0; }
+      else { settings.volume = previousVolume || 0.7; playSound('num', '5'); }
+      updateSoundControlsUI();
+      saveSettings();
+    });
+
+    document.getElementById('echoToggleBtn').addEventListener('click', () => {
+      settings.echo = !settings.echo;
+      updateSoundControlsUI();
+      saveSettings();
+      playSound('num', '7');
+    });
+
+    document.getElementById('hapticToggleBtn').addEventListener('click', () => {
+      settings.haptic = !settings.haptic;
+      triggerHaptic();
+      updateSoundControlsUI();
+      saveSettings();
+      playSound('ui');
+    });
+
+    document.querySelectorAll('.sound-pack-opt').forEach(btn => {
+      btn.addEventListener('click', () => {
+        settings.soundPack = btn.getAttribute('data-pack');
+        updateSoundPackUI();
+        saveSettings();
+        playSound('equals');
+      });
+    });
+
+    // Controles graficadora
+    document.querySelectorAll('.size-preset').forEach(btn => {
+      btn.addEventListener('click', () => {
+        playSound('ui');
+        if (isFullscreenMode) toggleAppFullscreen();
+        canvas.style.height = `${btn.getAttribute('data-height')}px`;
+        document.querySelectorAll('.size-preset').forEach(b => b.className = "size-preset nav-tab-inactive px-2 py-1 text-[10px] font-bold rounded-lg");
+        btn.className = "size-preset nav-tab-active px-2 py-1 text-[10px] font-bold rounded-lg";
+        resizeCanvas();
+        drawGraph();
+      });
+    });
+
+    document.getElementById('expandWidthBtn').addEventListener('click', () => {
+      playSound('ui');
+      if (isFullscreenMode) { toggleAppFullscreen(); return; }
+      isWideMode = !isWideMode;
+      mainContainer.classList.toggle('max-w-3xl', isWideMode);
+      setTimeout(() => { resizeCanvas(); drawGraph(); }, 310);
+    });
+
+    document.getElementById('resizeHandle').addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      if (isFullscreenMode) return;
+      isResizingHeight = true;
+      resizeStartY = e.clientY;
+      resizeStartHeight = canvas.getBoundingClientRect().height;
+    });
+    window.addEventListener('mousemove', (e) => {
+      if (!isResizingHeight) return;
+      const newHeight = Math.min(Math.max(resizeStartHeight + (e.clientY - resizeStartY), 150), 600);
+      canvas.style.height = `${newHeight}px`;
+      resizeCanvas();
+      drawGraph();
+    });
+    window.addEventListener('mouseup', () => { isResizingHeight = false; });
+
+    document.querySelectorAll('.math-insert').forEach(btn => {
+      btn.addEventListener('click', () => {
+        playSound('num', '3');
+        const text = btn.getAttribute('data-insert');
+        const start = functionInput.selectionStart;
+        const end = functionInput.selectionEnd;
+        functionInput.value = functionInput.value.substring(0, start) + text + functionInput.value.substring(end);
+        functionInput.focus();
+        functionInput.selectionStart = functionInput.selectionEnd = start + text.length;
+        drawGraph();
+      });
+    });
+
+    document.getElementById('clearFuncBtn').addEventListener('click', () => { playSound('clear'); functionInput.value = ''; drawGraph(); });
+    document.getElementById('plotBtn').addEventListener('click', () => { playSound('equals'); drawGraph(); });
+    functionInput.addEventListener('input', drawGraph);
+    functionInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { playSound('equals'); drawGraph(); } });
+
+    document.getElementById('zoomInBtn').addEventListener('click', () => { playSound('op'); scale *= 1.25; drawGraph(); });
+    document.getElementById('zoomOutBtn').addEventListener('click', () => { playSound('op'); scale /= 1.25; drawGraph(); });
+    document.getElementById('resetViewBtn').addEventListener('click', () => { playSound('clear'); scale = 35; offsetX = 0; offsetY = 0; drawGraph(); });
+
+    document.querySelectorAll('.quick-func').forEach(btn => {
+      btn.addEventListener('click', () => {
+        playSound('equals');
+        functionInput.value = btn.getAttribute('data-expr');
+        drawGraph();
+      });
+    });
+
+    canvas.addEventListener('mousedown', (e) => { isDragging = true; startX = e.clientX - offsetX; startY = e.clientY - offsetY; });
+    canvas.addEventListener('mousemove', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      hoverMouseX = e.clientX - rect.left;
+      if (!isDragging) drawGraph();
+    });
+    canvas.addEventListener('mouseleave', () => { hoverMouseX = null; coordBadge.classList.add('hidden'); drawGraph(); });
+    window.addEventListener('mousemove', (e) => { if (isDragging) { offsetX = e.clientX - startX; offsetY = e.clientY - startY; drawGraph(); } });
+    window.addEventListener('mouseup', () => isDragging = false);
+    canvas.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      scale = e.deltaY < 0 ? scale * 1.12 : scale / 1.12;
+      drawGraph();
+    }, { passive: false });
+
+    // Botones Calculadora y Overlay Historial
+    document.querySelectorAll('.btn-calc').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const val = btn.getAttribute('data-val');
+        const action = btn.getAttribute('data-action');
+        if (val !== null) handleNumber(val);
+        else if (['add', 'subtract', 'multiply', 'divide'].includes(action)) handleOperation(action);
+        else if (action) handleAction(action);
+      });
+    });
+
+    document.getElementById('themeToggleBtn').addEventListener('click', () => {
+      settings.darkMode = !settings.darkMode;
+      applyAllAppearance();
+      playSound('ui');
+    });
+
+    document.getElementById('scientificToggleBtn').addEventListener('click', () => {
+      document.getElementById('scientificDrawer').classList.toggle('open');
+      const icon = document.getElementById('sciIcon');
+      icon.style.transform = icon.style.transform === 'rotate(180deg)' ? 'rotate(0deg)' : 'rotate(180deg)';
+      playSound('ui');
+    });
+
+    document.getElementById('historyToggleBtn').addEventListener('click', () => toggleHistory(true));
+    document.getElementById('closeHistoryBtn').addEventListener('click', () => toggleHistory(false));
+    document.getElementById('clearHistoryBtn').addEventListener('click', () => { history = []; renderHistory(); playSound('clear'); });
+
+    // Atajos de teclado físico para Calculadora y Piano (2 octavas completas + Sustain)
+    const pianoKeyMap = {
+      'a': { semi: 0, note: 'Do' }, 'w': { semi: 1, note: 'Do#' },
+      's': { semi: 2, note: 'Re' }, 'e': { semi: 3, note: 'Re#' },
+      'd': { semi: 4, note: 'Mi' }, 'f': { semi: 5, note: 'Fa' },
+      't': { semi: 6, note: 'Fa#' }, 'g': { semi: 7, note: 'Sol' },
+      'y': { semi: 8, note: 'Sol#' }, 'h': { semi: 9, note: 'La' },
+      'u': { semi: 10, note: 'La#' }, 'j': { semi: 11, note: 'Si' },
+      'k': { semi: 12, note: 'Do+' }, 'o': { semi: 13, note: 'Do#+' },
+      'l': { semi: 14, note: 'Re+' }, 'p': { semi: 15, note: 'Re#+' },
+      'z': { semi: 16, note: 'Mi+' }, 'x': { semi: 17, note: 'Fa+' },
+      'c': { semi: 18, note: 'Fa#+' }, 'v': { semi: 19, note: 'Sol+' },
+      'b': { semi: 20, note: 'Sol#+' }, 'n': { semi: 21, note: 'La+' },
+      'm': { semi: 22, note: 'La#+' }, ',': { semi: 23, note: 'Si+' },
+      '.': { semi: 24, note: 'Do++' }
+    };
+
+    document.addEventListener('keydown', (e) => {
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) return;
+
+      if (!calculatorTab.classList.contains('hidden')) {
+        if (e.key >= '0' && e.key <= '9') handleNumber(e.key);
+        if (e.key === '.' || e.key === ',') handleNumber('.');
+        if (e.key === '+') handleOperation('add');
+        if (e.key === '-') handleOperation('subtract');
+        if (e.key === '*') handleOperation('multiply');
+        if (e.key === '/') { e.preventDefault(); handleOperation('divide'); }
+        if (e.key === 'Enter' || e.key === '=') { e.preventDefault(); calculateResult(); }
+        if (e.key === 'Backspace') handleAction('backspace');
+        if (e.key === 'Escape') handleAction('clear');
+        if (e.key === '%') handleAction('percent');
+      } else if (!pianoTab.classList.contains('hidden')) {
+        if (e.code === 'Space') {
+          e.preventDefault();
+          if (!e.repeat) toggleSustain();
+          return;
+        }
+        const mapped = pianoKeyMap[e.key.toLowerCase()];
+        if (mapped && !e.repeat) {
+          if (mapped.semi > 12 && pianoOctaveSpan === 1) {
+            pianoOctaveSpan = 2;
+            document.getElementById('pianoSpanBtn').textContent = '2 Oct';
+            buildPianoKeyboard();
+          }
+          const btnEl = document.querySelector(`.piano-key[data-semitone="${mapped.semi}"]`);
+          triggerPianoKey(mapped.semi, mapped.note, btnEl);
+        }
+      }
+    });
+
+    window.addEventListener('resize', () => {
+      if (!grapherTab.classList.contains('hidden')) { resizeCanvas(); drawGraph(); }
+    });
+
+    // =========================================================================
+    // 10. INICIALIZACIÓN COMPLETA
+    // =========================================================================
+    setupOfflineInfrastructure();
+    updateNetworkUI();
+    buildPianoKeyboard();
+    startPianoOscilloscope();
+    applyAllAppearance();
+    updateSoundControlsUI();
+    updateDisplay();
+    renderCompositions();
+  </script>
+</body>
+</html>
